@@ -70,54 +70,55 @@ backend/
 ### Installation
 
 1. Clone the repository:
-\`\`\`bash
+```
+bash
 git clone [repository-url]
-\`\`\`
+```
 
 2. Install frontend dependencies:
-\`\`\`bash
+```bash
 cd frontend
-pnpm install
-\`\`\`
+npm install
+```
 
 3. Install backend dependencies:
-\`\`\`bash
+```bash
 cd backend
-pnpm install
-\`\`\`
+npm install
+```
 
 4. Set up environment variables:
 
-Create `.env.local` in both frontend and backend directories with the following variables:
+Create ```.env``` in both frontend and backend directories with the following variables:
 
-Frontend:
-\`\`\`env
+Frontend - env:
+```
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
 NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
-\`\`\`
+```
 
-Backend:
-\`\`\`env
+Backend - env :
+```
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 FIREBASE_ADMIN_CREDENTIALS=your_firebase_admin_credentials
-\`\`\`
+```
 
 5. Start the development servers:
 
 Frontend:
-\`\`\`bash
+```
 cd frontend
-pnpm dev
-\`\`\`
+npm dev
+```
 
 Backend:
-\`\`\`bash
+```
 cd backend
-pnpm dev
-\`\`\`
+npm dev
+```
 
 The application will be available at:
 - Frontend: http://localhost:3000
