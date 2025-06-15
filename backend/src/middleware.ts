@@ -25,7 +25,7 @@ export function middleware(request: NextRequest) {
 
   // Handle OPTIONS request
   if (request.method === "OPTIONS") {
-    return NextResponse.json({}, { 
+    return new NextResponse(null, {
       status: 204,
       headers: corsHeaders,
     });
