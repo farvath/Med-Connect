@@ -39,7 +39,11 @@ export function middleware(request: NextRequest) {
   });
 
   // Skip token verification for auth routes
-  if (request.nextUrl.pathname.startsWith('/api/auth/signup') || request.nextUrl.pathname.startsWith('/api/auth/login')) {
+  if (
+    request.nextUrl.pathname.startsWith('/api/auth/signup') ||
+    request.nextUrl.pathname.startsWith('/api/auth/login') ||
+    request.nextUrl.pathname.startsWith('/api/auth/logout')
+  ) {
     return response;
   }
 

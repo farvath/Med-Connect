@@ -56,6 +56,7 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
+import api from "@/lib/api"
 
 export default function Homepage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -221,7 +222,13 @@ export default function Homepage() {
                       <span className="font-medium">Settings</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="my-2" />
-                    <DropdownMenuItem className="rounded-xl p-3 hover:bg-red-50 transition-colors duration-200 cursor-pointer text-red-600">
+                    <DropdownMenuItem
+                      className="rounded-xl p-3 hover:bg-red-50 transition-colors duration-200 cursor-pointer text-red-600"
+                      onClick={async () => {
+                        await api.post("/auth/logout");
+                        window.location.href = "/login";
+                      }}
+                    >
                       <LogOut className="mr-3 h-5 w-5" />
                       <span className="font-medium">Logout</span>
                     </DropdownMenuItem>
