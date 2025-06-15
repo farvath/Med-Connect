@@ -1,0 +1,21 @@
+import type { Metadata } from 'next'
+import './globals.css'
+
+export const metadata: Metadata = {
+  title: 'MedConnect - Professional Networking for Medical Professionals',
+  description: 'MedConnect is a professional networking platform exclusively for medical professionals. Connect, collaborate, and grow your medical career.',
+  generator: 'v0.dev',
+}
+
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}

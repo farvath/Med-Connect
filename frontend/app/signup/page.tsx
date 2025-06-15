@@ -1,0 +1,543 @@
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
+import { UserPlus, GraduationCap, Building2, Stethoscope, CheckCircle2, XCircle } from "lucide-react"
+import Link from "next/link"
+import { useState } from "react"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { apiFetch } from "@/lib/api"
+
+const specialties = [
+  "Allergy and Immunology",
+"Anatomy",
+"Anesthesiology",
+"Audiology",
+"Ayurveda (BAMS)",
+"Biochemistry",
+"Cardiology",
+"Cardiothoracic Surgery",
+"Community Health",
+"Community Medicine / Preventive and Social Medicine",
+"Critical Care Medicine",
+"Dentistry",
+"Dermatology, Venereology & Leprosy",
+"Diabetology",
+"Emergency Medicine",
+"Endocrinology",
+"ENT (Otorhinolaryngology)",
+"Family Medicine",
+"Forensic Medicine",
+"Gastroenterology",
+"General Medicine",
+"General Surgery",
+"Geriatrics",
+"Health Administration",
+"Hematology",
+"Homeopathy (BHMS)",
+"Infectious Diseases",
+"Internal Medicine",
+"Medical Education",
+"Medical Genetics",
+"Medical Informatics",
+"Medical Microbiology",
+"Medical Oncology",
+"Medical Physiology",
+"Microbiology",
+"Naturopathy and Yoga (BNYS)",
+"Neonatology",
+"Nephrology",
+"Neurology",
+"Neurosurgery",
+"Nuclear Medicine",
+"Obstetrics and Gynecology",
+"Occupational Medicine",
+"Oncology",
+"Ophthalmology",
+"Orthopedics",
+"Pathology",
+"Pediatrics",
+"Pharmacology",
+"Physical Medicine and Rehabilitation",
+"Plastic Surgery",
+"Psychiatry",
+"Public Health",
+"Pulmonology / Respiratory Medicine",
+"Radiation Oncology",
+"Radiodiagnosis / Radiology",
+"Research Methodology",
+"Rheumatology",
+"Sexology",
+"Siddha Medicine (BSMS)",
+"Sports Medicine",
+"Transfusion Medicine",
+"Tropical Medicine",
+"Unani Medicine (BUMS)",
+"Urology",
+"Vascular Surgery"
+
+]
+
+const institutions = [
+  "A.J. Hospital & Research Centre",
+  "A.J. Institute of Medical Sciences",
+  "Father Muller Homoeopathic Medical College",
+  "Father Muller Medical College",
+  "Father Muller Medical College Hospital",
+  "Indiana Hospital & Heart Institute",
+  "Kanachur Institute of Medical Sciences",
+  "Karnataka Ayurveda Medical College",
+  "Kasturba Medical College, Mangalore",
+  "KMC Hospital, Mangalore",
+  "K.S. Hegde Hospital",
+  "K.S. Hegde Medical Academy",
+  "Mangala Hospital & Kidney Foundation",
+  "Sharada Ayurveda Medical College",
+  "Srinivas Institute of Medical Sciences",
+  "Unity Hospital, Mangalore",
+  "Wenlock District Hospital",
+  "Yenepoya Medical College",
+  "Yenepoya Specialty Hospital"
+]
+
+const indianCities = [
+  "Mumbai",
+  "Delhi",
+  "Bangalore",
+  "Hyderabad",
+  "Chennai",
+  "Kolkata",
+  "Pune",
+  "Ahmedabad",
+  "Jaipur",
+  "Lucknow",
+  "Kanpur",
+  "Nagpur",
+  "Indore",
+  "Thane",
+  "Bhopal",
+  "Visakhapatnam",
+  "Patna",
+  "Vadodara",
+  "Ghaziabad",
+  "Ludhiana",
+  "Coimbatore",
+  "Kochi",
+  "Mangalore",
+  "Mysore",
+  "Nashik",
+  "Vijayawada",
+  "Madurai",
+  "Jabalpur",
+  "Jamshedpur",
+  "Asansol",
+  "Dhanbad",
+  "Faridabad",
+  "Allahabad",
+  "Amritsar",
+  "Varanasi",
+  "Rajkot",
+  "Meerut",
+  "Srinagar",
+  "Jodhpur",
+  "Guwahati",
+  "Chandigarh",
+  "Thiruvananthapuram",
+  "Ranchi",
+  "Gorakhpur",
+  "Warangal",
+  "Guntur",
+  "Bhubaneswar",
+  "Tiruchirappalli",
+  "Salem",
+  "Mira-Bhayandar",
+  "Tiruppur",
+  "Malegaon",
+  "Jalandhar",
+  "Bareilly",
+  "Aligarh",
+  "Moradabad",
+  "Solapur",
+  "Bhiwandi",
+  "Jammu",
+  "Dehradun",
+  "Ujjain",
+  "Sangli",
+  "Belgaum",
+  "Gulbarga",
+  "Jamnagar",
+  "Bhubaneswar",
+  "Mangalore",
+  "Kozhikode",
+  "Thrissur",
+  "Kollam",
+  "Kottayam",
+  "Palakkad",
+  "Alappuzha",
+  "Kannur",
+  "Kasaragod",
+  "Pathanamthitta",
+  "Idukki",
+  "Wayanad",
+  "Malappuram"
+]
+
+// Ensure unique values for dropdowns to avoid duplicate React keys
+const uniqueSpecialties = Array.from(new Set(specialties));
+const uniqueInstitutions = Array.from(new Set(institutions));
+const uniqueIndianCities = Array.from(new Set(indianCities));
+
+export default function SignupPage() {
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [openSpecialty, setOpenSpecialty] = useState(false)
+  const [openInstitution, setOpenInstitution] = useState(false)
+  const [openLocation, setOpenLocation] = useState(false)
+  const [selectedSpecialty, setSelectedSpecialty] = useState("")
+  const [selectedInstitution, setSelectedInstitution] = useState("")
+  const [selectedLocation, setSelectedLocation] = useState("")
+  const [form, setForm] = useState({ name: "", email: "", password: "" })
+  const [error, setError] = useState<string | null>(null)
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [accountType, setAccountType] = useState("");
+  const [agreed, setAgreed] = useState(false);
+
+  const passwordRequirements = [
+    { id: "length", text: "At least 8 characters", met: password.length >= 8 },
+    { id: "uppercase", text: "At least one uppercase letter", met: /[A-Z]/.test(password) },
+    { id: "lowercase", text: "At least one lowercase letter", met: /[a-z]/.test(password) },
+    { id: "number", text: "At least one number", met: /[0-9]/.test(password) },
+    { id: "special", text: "At least one special character", met: /[!@#$%^&*(),.?":{}|<>]/.test(password) },
+  ]
+
+  const passwordsMatch = password === confirmPassword && password !== ""
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    
+    // Validation
+    if (!agreed) {
+      setError("You must agree to the Terms of Service and Privacy Policy.");
+      return;
+    }
+    
+    if (!firstName || !lastName || !selectedSpecialty || !selectedInstitution || !selectedLocation || !accountType) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+    
+    if (!passwordsMatch) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    const signupData = {
+      name: `${firstName} ${lastName}`.trim(),
+      email: form.email,
+      password,
+      specialty: selectedSpecialty,
+      institution: selectedInstitution,
+      location: selectedLocation,
+      accountType,
+    };
+
+    try {
+      const response = await apiFetch("/auth/signup", {
+        method: "POST",
+        data: signupData,
+      });
+      
+    } catch (err: any) {
+      console.error('❌ Signup failed:', err);
+      setError(err.message);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-lg w-full space-y-6 p-6 bg-white rounded-2xl shadow-xl">
+        <div className="text-center space-y-1">
+          <h2 className="text-2xl font-bold text-blue-900">Create your Med Connect Account</h2>
+          <p className="text-gray-600 text-sm">Join the professional medical network</p>
+        </div>
+
+        <Card className="shadow-none border-none bg-transparent">
+          <CardContent className="space-y-4 p-0">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Account Type Selection */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">I am a:</Label>
+                <div className="grid sm:grid-cols-3 gap-2">
+                  <label
+                    className={`flex items-center space-x-2 p-2 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-all ${
+                      accountType === "doctor" ? "ring-2 ring-blue-500 bg-blue-50" : ""
+                    }`}
+                    onClick={() => setAccountType("doctor")}
+                  >
+                    <Checkbox 
+                      id="doctor" 
+                      checked={accountType === "doctor"} 
+                      onCheckedChange={() => setAccountType("doctor")}
+                      className="pointer-events-none"
+                    />
+                    <div className="flex items-center space-x-1">
+                      <UserPlus className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm">Doctor</span>
+                    </div>
+                  </label>
+                  <label
+                    className={`flex items-center space-x-2 p-2 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-all ${
+                      accountType === "student" ? "ring-2 ring-blue-500 bg-blue-50" : ""
+                    }`}
+                    onClick={() => setAccountType("student")}
+                  >
+                    <Checkbox 
+                      id="student" 
+                      checked={accountType === "student"} 
+                      onCheckedChange={() => setAccountType("student")}
+                      className="pointer-events-none"
+                    />
+                    <div className="flex items-center space-x-1">
+                      <GraduationCap className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm">Student</span>
+                    </div>
+                  </label>
+                  <label
+                    className={`flex items-center space-x-2 p-2 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-all ${
+                      accountType === "institution" ? "ring-2 ring-blue-500 bg-blue-50" : ""
+                    }`}
+                    onClick={() => setAccountType("institution")}
+                  >
+                    <Checkbox 
+                      id="institution" 
+                      checked={accountType === "institution"} 
+                      onCheckedChange={() => setAccountType("institution")}
+                      className="pointer-events-none"
+                    />
+                    <div className="flex items-center space-x-1">
+                      <Building2 className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm">Hospital</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Personal Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="firstName" className="text-sm">First Name</Label>
+                  <Input id="firstName" placeholder="John" value={firstName} onChange={e => setFirstName(e.target.value)} className="h-9" />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="lastName" className="text-sm">Last Name</Label>
+                  <Input id="lastName" placeholder="Doe" value={lastName} onChange={e => setLastName(e.target.value)} className="h-9" />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="email" className="text-sm">Email Address</Label>
+                <Input id="email" type="email" placeholder="john.doe@example.com" name="email" value={form.email} onChange={handleChange} className="h-9" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="password" className="text-sm">Password</Label>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
+                  <Input 
+                    id="confirmPassword" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+              </div>
+
+              {/* Password Requirements */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {passwordRequirements.map((req) => (
+                  <div key={req.id} className="flex items-center space-x-1">
+                    {req.met ? (
+                      <CheckCircle2 className="w-3 h-3 text-green-500" />
+                    ) : (
+                      <XCircle className="w-3 h-3 text-red-500" />
+                    )}
+                    <span className={req.met ? "text-green-600" : "text-red-600"}>
+                      {req.text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Professional Information */}
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="specialty" className="text-sm">Specialty</Label>
+                  <Popover open={openSpecialty} onOpenChange={setOpenSpecialty}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openSpecialty}
+                        className="w-full h-9 justify-between text-sm"
+                      >
+                        {selectedSpecialty || "Select..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[200px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search..." className="h-9" />
+                        <CommandEmpty>None found</CommandEmpty>
+                        <CommandGroup className="max-h-[200px] overflow-y-auto">
+                          {uniqueSpecialties.map((specialty) => (
+                            <CommandItem
+                              key={specialty}
+                              value={specialty}
+                              onSelect={() => {
+                                setSelectedSpecialty(specialty)
+                                setOpenSpecialty(false)
+                              }}
+                              className="text-sm"
+                            >
+                              {specialty}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="institution" className="text-sm">Institution</Label>
+                  <Popover open={openInstitution} onOpenChange={setOpenInstitution}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openInstitution}
+                        className="w-full h-9 justify-between text-sm"
+                      >
+                        {selectedInstitution || "Select..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[200px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search..." className="h-9" />
+                        <CommandEmpty>None found</CommandEmpty>
+                        <CommandGroup className="max-h-[200px] overflow-y-auto">
+                          {uniqueInstitutions.map((institution) => (
+                            <CommandItem
+                              key={institution}
+                              value={institution}
+                              onSelect={() => {
+                                setSelectedInstitution(institution)
+                                setOpenInstitution(false)
+                              }}
+                              className="text-sm"
+                            >
+                              {institution}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="location" className="text-sm">Location</Label>
+                  <Popover open={openLocation} onOpenChange={setOpenLocation}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openLocation}
+                        className="w-full h-9 justify-between text-sm"
+                      >
+                        {selectedLocation || "Select..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[200px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search..." className="h-9" />
+                        <CommandEmpty>None found</CommandEmpty>
+                        <CommandGroup className="max-h-[200px] overflow-y-auto">
+                          {uniqueIndianCities.map((city) => (
+                            <CommandItem
+                              key={city}
+                              value={city}
+                              onSelect={() => {
+                                setSelectedLocation(city)
+                                setOpenLocation(false)
+                              }}
+                              className="text-sm"
+                            >
+                              {city}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              {/* Terms and Error */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="terms" checked={agreed} onCheckedChange={val => setAgreed(val === true)} />
+                  <Label htmlFor="terms" className="text-xs text-gray-600">
+                    I agree to the{" "}
+                    <Link href="#" className="text-blue-600 hover:underline">Terms</Link>
+                    {" "}and{" "}
+                    <Link href="#" className="text-blue-600 hover:underline">Privacy Policy</Link>
+                  </Label>
+                </div>
+                {error && <div className="text-red-600 text-xs">{error}</div>}
+              </div>
+
+              {/* Submit and Login */}
+              <div className="pt-2 space-y-3">
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white h-10 font-medium rounded-lg" type="submit">
+                  Create Account
+                </Button>
+                <div className="text-center">
+                  <span className="text-xs text-gray-600">
+                    Already have an account?{" "}
+                    <Link href="/login" className="text-blue-600 hover:underline font-medium">
+                      Sign in
+                    </Link>
+                  </span>
+                </div>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
