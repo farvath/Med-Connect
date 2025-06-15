@@ -99,15 +99,6 @@ cd backend
 npm run dev
 ```
 
-## API Routes
-
-- `POST /api/auth/signup` - User registration
-- `POST /api/auth/login` - User authentication
-- `GET /api/posts` - Fetch posts
-- `POST /api/posts` - Create new post
-- `POST /api/posts/like` - Like a post
-- `POST /api/posts/comment` - Comment on a post
-- `POST /api/posts/share` - Share a post
 
 ## Contributing
 
