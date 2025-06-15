@@ -3,13 +3,8 @@ import { connectDB } from "../../../../services/db";
 import User from "../../../../models/User";
 // @ts-ignore
 import bcrypt from "bcryptjs";
-import { withCorsHandler } from "../../../../middlewares/corsHandler";
 
-const handler = async (req: NextRequest) => {
-  if (req.method === "OPTIONS") {
-    // This will be handled by withCors
-    return new NextResponse(null, { status: 204 });
-  }
+export async function POST(req: NextRequest) {
   try {
     await connectDB();
     const { name, email, password, specialty, institution, location, accountType } = await req.json();
@@ -29,5 +24,3 @@ const handler = async (req: NextRequest) => {
   }
 };
 
-export const POST = withCorsHandler(handler);
-export const OPTIONS = withCorsHandler(handler);
