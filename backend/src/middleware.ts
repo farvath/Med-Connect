@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { verifyToken } from "./utils/tokenUtils";
 
 export function middleware(request: NextRequest) {
   const origin = request.headers.get("origin");
@@ -36,6 +37,29 @@ export function middleware(request: NextRequest) {
   Object.entries(corsHeaders).forEach(([key, value]) => {
     response.headers.append(key, value);
   });
+
+  // Skip token verification for auth routes
+  if (request.nextUrl.pathname.startsWith('/api/auth/signup') || request.nextUrl.pathname.startsWith('/api/auth/login')) {
+    return response;
+  }
+
+  // Extract token from cookies
+  const token = request.cookies.get("accessToken")?.value;
+  if (!token) {
+    return new NextResponse(JSON.stringify({ message: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
+    verifyToken(token);
+  } catch (error) {
+    return new NextResponse(JSON.stringify({ message: "Invalid or expired token" }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   return response;
 }

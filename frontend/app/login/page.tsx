@@ -1,3 +1,4 @@
+"use client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -5,8 +6,27 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Stethoscope } from "lucide-react"
 import Link from "next/link"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import api from "@/lib/api"
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const router = useRouter()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    try {
+      await api.post("/auth/login", { email, password })
+      router.push("/feed") // Redirect to feed or dashboard
+    } catch (err: any) {
+      setError(err.message || "Login failed")
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -29,29 +49,47 @@ export default function LoginPage() {
             <CardDescription>Enter your credentials to access your account</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div>
-              <Label htmlFor="email">Email Address</Label>
-              <Input id="email" type="email" placeholder="john.doe@example.com" />
-            </div>
-
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="••••••••" />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Checkbox id="remember" />
-                <Label htmlFor="remember" className="text-sm text-gray-600">
-                  Remember me
-                </Label>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="john.doe@example.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
               </div>
-              <Link href="#" className="text-sm text-blue-600 hover:underline">
-                Forgot password?
-              </Link>
-            </div>
 
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3">Sign In</Button>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                />
+              </div>
+
+              {error && <div className="text-red-600 text-sm">{error}</div>}
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="remember" />
+                  <Label htmlFor="remember" className="text-sm text-gray-600">
+                    Remember me
+                  </Label>
+                </div>
+                <Link href="#" className="text-sm text-blue-600 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
+
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3">
+                Sign In
+              </Button>
+            </form>
 
             <div className="text-center">
               <p className="text-sm text-gray-600">

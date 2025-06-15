@@ -13,6 +13,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { apiFetch } from "@/lib/api"
+import { useRouter } from "next/navigation"
 
 const specialties = [
   "Allergy and Immunology",
@@ -208,6 +209,7 @@ export default function SignupPage() {
   const [lastName, setLastName] = useState("");
   const [accountType, setAccountType] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const router = useRouter();
 
   const passwordRequirements = [
     { id: "length", text: "At least 8 characters", met: password.length >= 8 },
@@ -258,9 +260,14 @@ export default function SignupPage() {
         method: "POST",
         data: signupData,
       });
-      
+      // On success, redirect to login page
+      router.push("/login");
     } catch (err: any) {
-      console.error('❌ Signup failed:', err);
+      // If account already exists, redirect to login page
+      if (err.message && err.message.toLowerCase().includes("already registered")) {
+        router.push("/login");
+        return;
+      }
       setError(err.message);
     }
   };
