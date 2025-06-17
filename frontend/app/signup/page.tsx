@@ -310,11 +310,19 @@ export default function SignupPage() {
               {/* Profile Picture Upload */}
               <div className="flex flex-col items-center space-y-2 pb-2">
                 <div className="relative">
-                  <img
-                    src={profilePicPreview || "/placeholder-user.jpg"}
-                    alt="Profile Preview"
-                    className="w-20 h-20 rounded-full object-cover border-2 border-blue-200 shadow"
-                  />
+                  {profilePicPreview ? (
+                    <img
+                      src={profilePicPreview}
+                      alt="Profile Preview"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-blue-200 shadow"
+                    />
+                  ) : (
+                    <img
+                      src="https://ui-avatars.com/api/?name=Profile&background=E0E7EF&color=374151&size=80&rounded=true"
+                      alt="Profile Placeholder"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-blue-200 shadow"
+                    />
+                  )}
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}

@@ -1,8 +1,11 @@
 {
   "dependencies": {
-    "bcryptjs": "^3.0.2"
+    "@imagekit/next": "^2.1.2",
+    "bcryptjs": "^3.0.2",
+    "formidable": "^3.5.4"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^3.0.0"
+    "@types/bcryptjs": "^3.0.0",
+    "@types/formidable": "^3.4.5"
   }
 }
