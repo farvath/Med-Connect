@@ -8,6 +8,7 @@ export interface IUser extends Document {
   institution: string;
   location: string;
   accountType: string;
+  profilePic?: string;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -18,6 +19,7 @@ const UserSchema = new Schema<IUser>({
   institution: { type: String, required: true },
   location: { type: String, required: true },
   accountType: { type: String, required: true },
+  profilePic: { type: String },
 }, { versionKey: false });
 
 export default mongoose.models.User || mongoose.model<IUser>("User", UserSchema);

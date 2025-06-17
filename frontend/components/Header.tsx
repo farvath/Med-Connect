@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import api from "../lib/api";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, MessageCircle, Plus, Menu, X, Stethoscope, User, Settings, LogOut, Home, Users, Briefcase, GraduationCap, Building2, Rss, LogIn, UserPlus, ChevronDown } from "lucide-react";
 import Image from "next/image";
-import { useAuth } from "./AuthContext";
+import { useUser } from "../hooks/useUser";
 
 // Reusable NavbarItem component
 function NavbarItem({ href, label, active, Icon }: { href: string; label: string; active?: boolean; Icon?: any }) {
@@ -93,16 +93,18 @@ function MessageBar() {
 }
 
 // Enhanced ProfileBar
-function ProfileBar() {
+function ProfileBar({ onLogout }: { onLogout: () => void }) {
+  const { name, specialty, icon } = useUser();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="flex items-center gap-2 cursor-pointer group p-1 rounded-full hover:bg-blue-50 transition-all">
             <Avatar className="h-9 w-9 ring-2 ring-white shadow-lg">
-            <AvatarImage src="https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff" alt="Profile" />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-bold">P</AvatarFallback>
+            <AvatarImage src={icon || "https://ui-avatars.com/api/?name=" + encodeURIComponent(name || "User") + "&background=0D8ABC&color=fff"} alt="Profile" />
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-bold">{name ? name[0] : "P"}</AvatarFallback>
             </Avatar>
-          <span className="hidden md:block font-semibold text-gray-900 group-hover:text-blue-600 transition-colors"></span>
+          <span className="hidden md:block font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{name}</span>
            </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -111,8 +113,8 @@ function ProfileBar() {
         forceMount
       >
         <div className="p-4 border-b border-gray-100">
-          <p className="font-semibold text-gray-900">Dr. John Doe</p>
-          <p className="text-sm text-gray-600">Cardiologist</p>
+          <p className="font-semibold text-gray-900">{name || ""}</p>
+          <p className="text-sm text-gray-600">{specialty || ""}</p>
         </div>
         <DropdownMenuItem className="rounded-xl p-2.5 hover:bg-blue-50 transition-colors duration-200 cursor-pointer">
           <User className="mr-3 h-5 w-5 text-blue-600" />
@@ -129,10 +131,7 @@ function ProfileBar() {
         <DropdownMenuSeparator className="my-2" />
         <DropdownMenuItem
           className="rounded-xl p-2.5 hover:bg-red-50 transition-colors duration-200 cursor-pointer text-red-600"
-          onClick={async () => {
-            await api.post("/auth/logout");
-            window.location.href = "/login";
-          }}
+          onClick={onLogout}
         >
           <LogOut className="mr-3 h-5 w-5" />
           <span className="font-medium">Logout</span>
@@ -143,15 +142,26 @@ function ProfileBar() {
 }
 
 export default function Header() {
-  const { user, setUser } = useAuth();
+  const userStore = useUser();
+  const { name, specialty, icon } = userStore;
+  const clearUser = userStore.clearUser || (() => {});
+  const isLoggedIn = Boolean(name && specialty);
   const router = useRouter();
   const pathname = usePathname();
 
   const handleLogout = useCallback(async () => {
-    await api.post("/api/auth/logout");
-    setUser(null);
+    try {
+      await api.post("/auth/logout"); 
+    } catch (err) {
+      // Ignore logout errors (e.g., invalid/expired token)
+      console.warn("Logout API error (ignored):", err);
+    }
+    clearUser();
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("user-store");
+    }
     router.push("/");
-  }, [router, setUser]);
+  }, [router, clearUser]);
 
   // Define nav items for both states
   const navItemsLoggedIn = [
@@ -184,11 +194,11 @@ export default function Header() {
           </Link>
 
           {/* Search Bar */}
-          {user && <SearchBar />}
+          {isLoggedIn && <SearchBar />}
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-6 ">
-            {(user ? navItemsLoggedIn : navItemsLoggedOut).map((item) => (
+            {(isLoggedIn ? navItemsLoggedIn : navItemsLoggedOut).map((item) => (
               <NavbarItem
                 key={item.href}
                 href={item.href}
@@ -199,14 +209,12 @@ export default function Header() {
             ))}
          </nav>
 
-    
           {/* Right Side Actions */}
           <div className="flex items-center space-x-3 ">
-            {user && <NotificationBar />}
-            {user && <MessageBar />}
-            {user && <ProfileBar />}
-          
-            {!user && (
+            {isLoggedIn && <NotificationBar />}
+            {isLoggedIn && <MessageBar />}
+            {isLoggedIn && <ProfileBar onLogout={handleLogout} />}
+            {!isLoggedIn && (
               <Link href="/signup" className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-full  hover:bg-blue-700 font-semibold transition ">Sign Up</Link>
             )}
           </div>

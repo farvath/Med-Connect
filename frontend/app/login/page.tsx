@@ -9,22 +9,26 @@ import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import api from "@/lib/api"
-import { useAuth } from "@/components/AuthContext"
+import { useUser } from "@/hooks/useUser"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const router = useRouter()
-  const { setUser } = useAuth()
+  const { setUser } = useUser()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     try {
-      const res = await api.post("/auth/login", { email, password })
-      // Set user in context for instant navbar update
-      setUser({ accessToken: res.data?.accessToken || true })
+      const res: any = await api.post("/auth/login", { email, password })
+      setUser({
+        name: res.name || "",
+        specialty: res.specialty || "",
+        icon: res.profilePic || ""
+      })
+      console.log("Login setUser:", res)
       router.push("/feed") // Redirect to feed or dashboard
     } catch (err: any) {
       setError(err.message || "Login failed")
