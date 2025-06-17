@@ -38,11 +38,12 @@ export function middleware(request: NextRequest) {
     response.headers.append(key, value);
   });
 
-  // Skip token verification for auth routes
+  // Robust skip for auth routes (normalize path, remove trailing slash)
+  const path = request.nextUrl.pathname.replace(/\/+$/, '');
   if (
-    request.nextUrl.pathname.startsWith('/api/auth/signup') ||
-    request.nextUrl.pathname.startsWith('/api/auth/login') ||
-    request.nextUrl.pathname.startsWith('/api/auth/logout')
+    path === '/api/auth/signup' ||
+    path === '/api/auth/login' ||
+    path === '/api/auth/logout'
   ) {
     return response;
   }

@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       JSON.stringify({ 
         name: user.name,
       profilePic: user.profilePic, 
-      designation: user.designation 
+      specialty: user.specialty
       }), 
       { status: 200 }
     );
