@@ -25,17 +25,23 @@ MedConnect is a professional networking platform designed specifically for healt
 ## 🛠 Tech Stack
 
 ### Frontend
-- **Framework**: Next.js
-- **UI Components**: Custom components built with Shadcn UI
+- **Framework**: Next.js 13+
+- **UI Components**: Shadcn UI
 - **Styling**: TailwindCSS
-- **State Management**: React Hooks
-- **Authentication**: Firebase Authentication
+- **State Management**: Zustand (with persistence)
+- **Authentication State**: Zustand global store
+- **API Client**: Axios
 
 ### Backend
-- **Framework**: Next.js API Routes
-- **Database**: MongoDB (via services/db.ts)
-- **Authentication**: JWT + Firebase Auth
-- **File Storage**: Firebase Storage
+- **Framework**: Next.js API Routes (App Router)
+- **Database**: MongoDB (via Mongoose)
+- **Authentication**: JWT (JSON Web Tokens)
+- **File Storage**: [ImageKit](https://imagekit.io/) (for user avatars, institution logos, etc.)
+  - Integration via custom backend service (`backend/src/services/imagekitService.ts`)
+
+### Other
+- **TypeScript** everywhere
+- **CORS** and custom middleware for API security
 
 ## 📂 Project Structure
 
@@ -65,13 +71,12 @@ backend/
 - Node.js 18.x or higher
 - npm or pnpm package manager
 - MongoDB database
-- Firebase project credentials
+- ImageKit for file storage
 
 ### Installation
 
 1. Clone the repository:
-```
-bash
+```bash
 git clone [repository-url]
 ```
 
