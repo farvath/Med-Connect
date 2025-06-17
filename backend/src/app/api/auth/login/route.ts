@@ -31,8 +31,8 @@ export async function POST(req: NextRequest) {
     const refreshToken = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "7d" });
 
     const response = new NextResponse(JSON.stringify({ message: "Login successful" }), { status: 200 });
-    response.cookies.set("accessToken", accessToken, { httpOnly: true, maxAge: 3 * 60 * 60 });
-    response.cookies.set("refreshToken", refreshToken, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 });
+    response.cookies.set("accessToken", accessToken, { httpOnly: false, maxAge: 3 * 60 * 60 });
+    response.cookies.set("refreshToken", refreshToken, { httpOnly: false, maxAge: 7 * 24 * 60 * 60 });
 
     return response;
   } catch (error: any) {

@@ -9,18 +9,22 @@ import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import api from "@/lib/api"
+import { useAuth } from "@/components/AuthContext"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const router = useRouter()
+  const { setUser } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     try {
-      await api.post("/auth/login", { email, password })
+      const res = await api.post("/auth/login", { email, password })
+      // Set user in context for instant navbar update
+      setUser({ accessToken: res.data?.accessToken || true })
       router.push("/feed") // Redirect to feed or dashboard
     } catch (err: any) {
       setError(err.message || "Login failed")
@@ -102,14 +106,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        {/* Back to Home */}
-        <div className="text-center">
-          <Link href="/">
-            <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-              Back to Home
-            </Button>
-          </Link>
-        </div>
+      
       </div>
     </div>
   )
