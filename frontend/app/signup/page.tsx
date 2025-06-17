@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { UserPlus, GraduationCap, Building2, Stethoscope, CheckCircle2, XCircle } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
@@ -209,6 +209,9 @@ export default function SignupPage() {
   const [lastName, setLastName] = useState("");
   const [accountType, setAccountType] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [profilePic, setProfilePic] = useState<File | null>(null);
+  const [profilePicPreview, setProfilePicPreview] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   const passwordRequirements = [
@@ -224,6 +227,14 @@ export default function SignupPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
+
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfilePic(file);
+      setProfilePicPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -253,13 +264,26 @@ export default function SignupPage() {
       institution: selectedInstitution,
       location: selectedLocation,
       accountType,
+      // profilePic will be handled separately
     };
 
     try {
-      const response = await apiFetch("/auth/signup", {
-        method: "POST",
-        data: signupData,
-      });
+      let response;
+      if (profilePic) {
+        const formData = new FormData();
+        Object.entries(signupData).forEach(([key, value]) => formData.append(key, value as string));
+        formData.append("profilePic", profilePic);
+        response = await apiFetch("/auth/signup", {
+          method: "POST",
+          data: formData,
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else {
+        response = await apiFetch("/auth/signup", {
+          method: "POST",
+          data: signupData,
+        });
+      }
       // On success, redirect to login page
       router.push("/login");
     } catch (err: any) {
@@ -283,6 +307,33 @@ export default function SignupPage() {
         <Card className="shadow-none border-none bg-transparent">
           <CardContent className="space-y-4 p-0">
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Profile Picture Upload */}
+              <div className="flex flex-col items-center space-y-2 pb-2">
+                <div className="relative">
+                  <img
+                    src={profilePicPreview || "/placeholder-user.jpg"}
+                    alt="Profile Preview"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-blue-200 shadow"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-1 shadow hover:bg-blue-700 focus:outline-none"
+                    aria-label="Upload profile picture"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                  </button>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleProfilePicChange}
+                />
+                <span className="text-xs text-gray-500">Upload a profile picture (optional)</span>
+              </div>
+
               {/* Account Type Selection */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">I am a:</Label>
