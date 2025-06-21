@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes';
 import institutionsRoutes from './routes/institutionsRoutes';
+import lookupRoutes from './routes/lookupRoutes';
 // import other route files as you migrate them
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(cors({
 // Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/institutions', institutionsRoutes);
+app.use('/api/lookup', lookupRoutes);
 // app.use('/api/jobs', jobsRoutes);
 // app.use('/api/posts', postsRoutes);
 
