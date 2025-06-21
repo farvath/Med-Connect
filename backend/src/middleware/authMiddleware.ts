@@ -1,20 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "../utils/tokenUtils";
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 
-export function middleware(req: NextRequest) {
-  const token = req.cookies.get("accessToken")?.value;
+const jwtSecret = process.env.JWT_SECRET as string;
+
+export function authMiddleware(req: Request, res: Response, next: NextFunction) {
+  const token = req.cookies['accessToken'];
   if (!token) {
-    return new NextResponse(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
+    return res.status(401).json({ message: 'Unauthorized' });
   }
-
   try {
-    verifyToken(token);
-    return NextResponse.next();
+    const decoded = jwt.verify(token, jwtSecret) as { id: string };
+    (req as any).userId = decoded.id;
+    next();
   } catch (error) {
-    return new NextResponse(JSON.stringify({ message: "Invalid or expired token" }), { status: 401 });
+    return res.status(401).json({ message: 'Invalid or expired token' });
   }
 }
-
-export const config = {
-  matcher: "/api/:path*",
-};

@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { NextRequest } from "next/server";
 
 const jwtSecret = process.env.JWT_SECRET as string;
 if (!jwtSecret) {
@@ -25,4 +26,12 @@ export function extractUserIdFromToken(token: string): string {
     return decoded.id;
   }
   throw new Error("Invalid token payload");
+}
+
+export function getUserIdFromRequest(req: NextRequest): string {
+  const token = req.cookies.get("accessToken")?.value;
+  if (!token) {
+    throw new Error("Unauthorized: No access token found");
+  }
+  return extractUserIdFromToken(token);
 }

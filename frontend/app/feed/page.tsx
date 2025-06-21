@@ -1,12 +1,48 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Heart, MessageSquare, Share2, TrendingUp } from "lucide-react"
-import Link from "next/link"
+"use client"
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Heart, MessageSquare, Share2, TrendingUp, Plus, X } from "lucide-react";
+import Link from "next/link";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function FeedPage() {
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [videos, setVideos] = useState<File[]>([]);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+
+  const handleFileAdd = (files: FileList | null, setter: Function) => {
+    if (!files) return;
+    setter((prev: File[]) => [...prev, ...Array.from(files)]);
+  };
+
+  const handleFileRemove = (index: number, setter: Function) => {
+    setter((prev: File[]) => prev.filter((_, i) => i !== index));
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setModalOpen(false);
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isModalOpen]);
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -16,6 +52,7 @@ export default function FeedPage() {
 
         {/* Feed Posts */}
         <div className="space-y-6">
+          <div className="space-y-6">
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-center space-x-3">
@@ -124,8 +161,103 @@ export default function FeedPage() {
           </Card>
         </div>
 
+        </div>
+        {/* Floating Button */}
+        <Button
+          onClick={() => setModalOpen(true)}
+          className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 p-0 shadow-lg"
+        >
+          <Plus className="w-6 h-6" />
+          
+        </Button>
+
+        {/* Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-white/20 backdrop-blur-sm z-40 flex items-center justify-center px-2">
+           <div
+  ref={modalRef}
+  className="bg-white rounded-xl shadow-2xl w-full sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto relative mx-2"
+>
+  <div className="border-b p-4">
+    <h2 className="text-xl font-semibold text-blue-800">Create a New Post</h2>
+  </div>
+
+              <Tabs defaultValue="video" className="w-full p-6">
+                <TabsList className="grid w-full grid-cols-3 mb-6 border-b pb-2">
+                  <TabsTrigger value="video" className="text-md font-medium data-[state=active]:text-blue-600 data-[state=active]:border-b-2 border-blue-600">Video</TabsTrigger>
+                  <TabsTrigger value="photo" className="text-md font-medium data-[state=active]:text-blue-600 data-[state=active]:border-b-2 border-blue-600">Photo</TabsTrigger>
+                  <TabsTrigger value="article" className="text-md font-medium data-[state=active]:text-blue-600 data-[state=active]:border-b-2 border-blue-600">Write Article</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="video">
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-4">
+                      {videos.map((video, index) => (
+                        <div key={index} className="relative w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <video className="w-full h-full object-cover rounded-lg" src={URL.createObjectURL(video)} controls />
+                        </div>
+                      ))}
+                      <label className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-400">
+                        <input
+                          type="file"
+                          accept="video/*"
+                          className="hidden"
+                          onChange={(e) => handleFileAdd(e.target.files, setVideos)}
+                        />
+                        <Plus className="text-gray-500" />
+                      </label>
+                    </div>
+                    <Textarea placeholder="Write something about your video..." />
+                    <div className="pt-2 text-right">
+                      <Button className="bg-blue-600 text-white hover:bg-blue-700">Post</Button>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="photo">
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-4">
+                      {photos.map((photo, index) => (
+                        <div key={index} className="relative w-24 h-24 bg-gray-100 rounded-lg overflow-hidden">
+                          <img src={URL.createObjectURL(photo)} className="w-full h-full object-cover" alt="Uploaded" />
+                        </div>
+                      ))}
+                      <label className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-400">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleFileAdd(e.target.files, setPhotos)}
+                        />
+                        <Plus className="text-gray-500" />
+                      </label>
+                    </div>
+                    <Textarea placeholder="Write something about your photos..." />
+                    <div className="pt-2 text-right">
+                      <Button className="bg-blue-600 text-white hover:bg-blue-700">Post</Button>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="article">
+                  <div className="space-y-4">
+                    <Textarea
+                      placeholder="Write your article here..."
+                      rows={12}
+                      className="border-gray-300"
+                    />
+                    <div className="text-right">
+                      <Button className="bg-blue-600 text-white hover:bg-blue-700">Post</Button>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+        )}
+
         {/* Trending Topics */}
-        <Card className="mt-8">
+         <Card className="mt-8">
           <CardHeader>
             <CardTitle className="flex items-center text-blue-900">
               <TrendingUp className="w-5 h-5 mr-2" />
@@ -149,16 +281,7 @@ export default function FeedPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Back to Home */}
-        <div className="mt-8 text-center">
-          <Link href="/">
-            <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-              Back to Home
-            </Button>
-          </Link>
-        </div>
       </div>
     </div>
-  )
+  );
 }

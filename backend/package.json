@@ -3,13 +3,16 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "dev": "ts-node src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.0",
+    "express": "^5.1.0",
     "firebase-admin": "^11.0.0",
     "imagekit": "^6.0.0",
     "jsonwebtoken": "^9.0.0",
@@ -19,6 +22,8 @@
     "react-dom": "^18.0.0"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
     "@types/imagekit": "^3.1.5",
     "@types/react": "19.1.8",
     "typescript": "^5.0.0"

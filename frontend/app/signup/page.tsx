@@ -8,191 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { UserPlus, GraduationCap, Building2, Stethoscope, CheckCircle2, XCircle } from "lucide-react"
 import Link from "next/link"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { apiFetch } from "@/lib/api"
 import { useRouter } from "next/navigation"
-
-const specialties = [
-  "Allergy and Immunology",
-"Anatomy",
-"Anesthesiology",
-"Audiology",
-"Ayurveda (BAMS)",
-"Biochemistry",
-"Cardiology",
-"Cardiothoracic Surgery",
-"Community Health",
-"Community Medicine / Preventive and Social Medicine",
-"Critical Care Medicine",
-"Dentistry",
-"Dermatology, Venereology & Leprosy",
-"Diabetology",
-"Emergency Medicine",
-"Endocrinology",
-"ENT (Otorhinolaryngology)",
-"Family Medicine",
-"Forensic Medicine",
-"Gastroenterology",
-"General Medicine",
-"General Surgery",
-"Geriatrics",
-"Health Administration",
-"Hematology",
-"Homeopathy (BHMS)",
-"Infectious Diseases",
-"Internal Medicine",
-"Medical Education",
-"Medical Genetics",
-"Medical Informatics",
-"Medical Microbiology",
-"Medical Oncology",
-"Medical Physiology",
-"Microbiology",
-"Naturopathy and Yoga (BNYS)",
-"Neonatology",
-"Nephrology",
-"Neurology",
-"Neurosurgery",
-"Nuclear Medicine",
-"Obstetrics and Gynecology",
-"Occupational Medicine",
-"Oncology",
-"Ophthalmology",
-"Orthopedics",
-"Pathology",
-"Pediatrics",
-"Pharmacology",
-"Physical Medicine and Rehabilitation",
-"Plastic Surgery",
-"Psychiatry",
-"Public Health",
-"Pulmonology / Respiratory Medicine",
-"Radiation Oncology",
-"Radiodiagnosis / Radiology",
-"Research Methodology",
-"Rheumatology",
-"Sexology",
-"Siddha Medicine (BSMS)",
-"Sports Medicine",
-"Transfusion Medicine",
-"Tropical Medicine",
-"Unani Medicine (BUMS)",
-"Urology",
-"Vascular Surgery"
-
-]
-
-const institutions = [
-  "A.J. Hospital & Research Centre",
-  "A.J. Institute of Medical Sciences",
-  "Father Muller Homoeopathic Medical College",
-  "Father Muller Medical College",
-  "Father Muller Medical College Hospital",
-  "Indiana Hospital & Heart Institute",
-  "Kanachur Institute of Medical Sciences",
-  "Karnataka Ayurveda Medical College",
-  "Kasturba Medical College, Mangalore",
-  "KMC Hospital, Mangalore",
-  "K.S. Hegde Hospital",
-  "K.S. Hegde Medical Academy",
-  "Mangala Hospital & Kidney Foundation",
-  "Sharada Ayurveda Medical College",
-  "Srinivas Institute of Medical Sciences",
-  "Unity Hospital, Mangalore",
-  "Wenlock District Hospital",
-  "Yenepoya Medical College",
-  "Yenepoya Specialty Hospital"
-]
-
-const indianCities = [
-  "Mumbai",
-  "Delhi",
-  "Bangalore",
-  "Hyderabad",
-  "Chennai",
-  "Kolkata",
-  "Pune",
-  "Ahmedabad",
-  "Jaipur",
-  "Lucknow",
-  "Kanpur",
-  "Nagpur",
-  "Indore",
-  "Thane",
-  "Bhopal",
-  "Visakhapatnam",
-  "Patna",
-  "Vadodara",
-  "Ghaziabad",
-  "Ludhiana",
-  "Coimbatore",
-  "Kochi",
-  "Mangalore",
-  "Mysore",
-  "Nashik",
-  "Vijayawada",
-  "Madurai",
-  "Jabalpur",
-  "Jamshedpur",
-  "Asansol",
-  "Dhanbad",
-  "Faridabad",
-  "Allahabad",
-  "Amritsar",
-  "Varanasi",
-  "Rajkot",
-  "Meerut",
-  "Srinagar",
-  "Jodhpur",
-  "Guwahati",
-  "Chandigarh",
-  "Thiruvananthapuram",
-  "Ranchi",
-  "Gorakhpur",
-  "Warangal",
-  "Guntur",
-  "Bhubaneswar",
-  "Tiruchirappalli",
-  "Salem",
-  "Mira-Bhayandar",
-  "Tiruppur",
-  "Malegaon",
-  "Jalandhar",
-  "Bareilly",
-  "Aligarh",
-  "Moradabad",
-  "Solapur",
-  "Bhiwandi",
-  "Jammu",
-  "Dehradun",
-  "Ujjain",
-  "Sangli",
-  "Belgaum",
-  "Gulbarga",
-  "Jamnagar",
-  "Bhubaneswar",
-  "Mangalore",
-  "Kozhikode",
-  "Thrissur",
-  "Kollam",
-  "Kottayam",
-  "Palakkad",
-  "Alappuzha",
-  "Kannur",
-  "Kasaragod",
-  "Pathanamthitta",
-  "Idukki",
-  "Wayanad",
-  "Malappuram"
-]
-
-// Ensure unique values for dropdowns to avoid duplicate React keys
-const uniqueSpecialties = Array.from(new Set(specialties));
-const uniqueInstitutions = Array.from(new Set(institutions));
-const uniqueIndianCities = Array.from(new Set(indianCities));
 
 export default function SignupPage() {
   const [password, setPassword] = useState("")
@@ -211,6 +32,9 @@ export default function SignupPage() {
   const [agreed, setAgreed] = useState(false);
   const [profilePic, setProfilePic] = useState<File | null>(null);
   const [profilePicPreview, setProfilePicPreview] = useState<string>("");
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [institutions, setInstitutions] = useState<string[]>([]);
+  const [indianCities, setIndianCities] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -295,6 +119,24 @@ export default function SignupPage() {
       setError(err.message);
     }
   };
+
+  useEffect(() => {
+    async function fetchLookups() {
+      try {
+        const [specialitiesRes, institutionsRes, citiesRes] = await Promise.all([
+          apiFetch<{ name: string }[]>("/lookup/specialities-list"),
+          apiFetch<{ name: string }[]>("/lookup/institutions-list"),
+          apiFetch<{ name: string }[]>("/lookup/cities-list"),
+        ]);
+        setSpecialties(specialitiesRes.map((s) => s.name));
+        setInstitutions(institutionsRes.map((i) => i.name));
+        setIndianCities(citiesRes.map((c) => c.name));
+      } catch (err) {
+        // Optionally handle error
+      }
+    }
+    fetchLookups();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-6 px-4 sm:px-6 lg:px-8">
@@ -478,7 +320,7 @@ export default function SignupPage() {
                         <CommandInput placeholder="Search..." className="h-9" />
                         <CommandEmpty>None found</CommandEmpty>
                         <CommandGroup className="max-h-[200px] overflow-y-auto">
-                          {uniqueSpecialties.map((specialty) => (
+                          {specialties.map((specialty) => (
                             <CommandItem
                               key={specialty}
                               value={specialty}
@@ -515,7 +357,7 @@ export default function SignupPage() {
                         <CommandInput placeholder="Search..." className="h-9" />
                         <CommandEmpty>None found</CommandEmpty>
                         <CommandGroup className="max-h-[200px] overflow-y-auto">
-                          {uniqueInstitutions.map((institution) => (
+                          {institutions.map((institution) => (
                             <CommandItem
                               key={institution}
                               value={institution}
@@ -552,7 +394,7 @@ export default function SignupPage() {
                         <CommandInput placeholder="Search..." className="h-9" />
                         <CommandEmpty>None found</CommandEmpty>
                         <CommandGroup className="max-h-[200px] overflow-y-auto">
-                          {uniqueIndianCities.map((city) => (
+                          {indianCities.map((city) => (
                             <CommandItem
                               key={city}
                               value={city}
