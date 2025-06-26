@@ -6,6 +6,8 @@ import cors from 'cors';
 import authRoutes from './routes/authRoutes';
 import institutionsRoutes from './routes/institutionsRoutes';
 import lookupRoutes from './routes/lookupRoutes';
+import userRoutes from './routes/userRoutes';
+import { connectDB } from './services/db';
 // import other route files as you migrate them
 
 const app = express();
@@ -18,13 +20,22 @@ app.use(cors({
   credentials: true,
 }));
 
-// Mount routes
-app.use('/api/auth', authRoutes);
-app.use('/api/institutions', institutionsRoutes);
-app.use('/api/lookup', lookupRoutes);
-// app.use('/api/jobs', jobsRoutes);
-// app.use('/api/posts', postsRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Express server running on port ${PORT}`);
-});
+connectDB()
+  .then(() => {
+    console.log(" MongoDB connected");
+
+    // Mount routes
+    app.use('/api/auth', authRoutes);
+    app.use('/api/institutions', institutionsRoutes);
+    app.use('/api/lookup', lookupRoutes);
+    app.use('/api/user', userRoutes);
+
+    app.listen(PORT, () => {
+      console.log(` Express server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to connect to MongoDB", err);
+    process.exit(1); // exit if DB can't be connected
+  });
