@@ -4,12 +4,14 @@ import bcrypt from 'bcryptjs';
 import { getUserByEmail } from '../services/userService';
 import { connectDB } from '../services/db';
 
+
 const jwtSecret = process.env.JWT_SECRET as string;
 
 export const signup = async (req: Request, res: Response) => {
   try {
     await connectDB();
 
+    // Multer will parse form fields here:
     const {
       name,
       email,
@@ -17,9 +19,11 @@ export const signup = async (req: Request, res: Response) => {
       specialty,
       institution,
       location,
-      accountType,
-      profilePic,
+      accountType
     } = req.body;
+
+    
+    const profilePic = req.file; 
 
     if (!name || !email || !password || !specialty || !institution || !location || !accountType) {
       return res.status(400).json({ message: 'Missing fields' });
