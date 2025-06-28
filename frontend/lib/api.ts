@@ -22,15 +22,22 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor — keeps full Axios response for `apiFetch`
 api.interceptors.response.use(
-  (response) => response, // Keep full response object
+  (response) => response, // Keep full response
   (error) => {
+    const status = error.response?.status;
     const message =
-      error.response?.data?.message || error.message || 'Something went wrong';
-    return Promise.reject(new Error(message));
+      error.response?.data?.message || error.message || "Something went wrong";
+
+    const err = new Error(message) as Error & { status?: number };
+    err.status = status;
+
+    // ⚠️ Do NOT console.log or throw extra info
+    return Promise.reject(err);
   }
 );
+
+
 
 // Generic typed API wrapper
 export async function apiFetch<T>(

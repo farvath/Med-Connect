@@ -60,65 +60,63 @@ export default function SignupPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    
-    // Validation
-    if (!agreed) {
-      setError("You must agree to the Terms of Service and Privacy Policy.");
-      return;
-    }
-    
-    if (!firstName || !lastName || !selectedSpecialty || !selectedInstitution || !selectedLocation || !accountType) {
-      setError("Please fill in all required fields.");
-      return;
-    }
-    
-    if (!passwordsMatch) {
-      setError("Passwords do not match.");
-      return;
-    }
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError(null);
 
-    const signupData = {
-      name: `${firstName} ${lastName}`.trim(),
-      email: form.email,
-      password,
-      specialty: selectedSpecialty,
-      institution: selectedInstitution,
-      location: selectedLocation,
-      accountType,
-      // profilePic will be handled separately
-    };
+  if (!agreed) {
+    setError("You must agree to the Terms of Service and Privacy Policy.");
+    return;
+  }
+
+  if (!firstName || !lastName || !selectedSpecialty || !selectedInstitution || !selectedLocation || !accountType) {
+    setError("Please fill in all required fields.");
+    return;
+  }
+
+  if (!passwordsMatch) {
+    setError("Passwords do not match.");
+    return;
+  }
+
+  const signupData = {
+    name: `${firstName} ${lastName}`.trim(),
+    email: form.email,
+    password,
+    specialty: selectedSpecialty,
+    institution: selectedInstitution,
+    location: selectedLocation,
+    accountType,
+  };
 
     try {
-      let response;
-      if (profilePic) {
-        const formData = new FormData();
-        Object.entries(signupData).forEach(([key, value]) => formData.append(key, value as string));
-        formData.append("profilePic", profilePic);
-        response = await apiFetch("/auth/signup", {
-          method: "POST",
-          data: formData,
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else {
-        response = await apiFetch("/auth/signup", {
-          method: "POST",
-          data: signupData,
-        });
-      }
-      // On success, redirect to login page
-      router.push("/login");
-    } catch (err: any) {
-      // If account already exists, redirect to login page
-      if (err.message && err.message.toLowerCase().includes("already registered")) {
-        router.push("/login");
-        return;
-      }
-      setError(err.message);
+    const formData = new FormData();
+    Object.entries(signupData).forEach(([key, value]) =>
+      formData.append(key, value)
+    );
+
+    // Ensure 'profilePic' key is always present
+    if (profilePic) {
+      formData.append("profilePic", profilePic);
+    } else {
+      formData.append("profilePic", "");
     }
-  };
+
+    await apiFetch("/auth/signup", {
+      method: "POST",
+      data: formData,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    router.push("/login");
+  } catch (err: any) {
+    if (err.message?.toLowerCase().includes("already registered")) {
+      router.push("/login");
+      return;
+    }
+    setError(err.message);
+  }
+};
 
   useEffect(() => {
     async function fetchLookups() {

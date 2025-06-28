@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ApiResponse } from "@/lib/api";
+import { ApiResponse } from "@/types/apiResponse";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -170,14 +170,13 @@ interface User {
 useEffect(() => {
   (async () => {
     try {
-      console.log("Calling /user/getUser...");
+    
 
       const res = await apiFetch<User>("/user/getUser");
-      console.log("Fetched user:", res);
+      
 
       setUser(res);
     } catch (err) {
-      console.error("Failed to fetch user", err);
       setUser(null);
     } finally {
       setLoading(false);
