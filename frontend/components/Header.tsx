@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import api from "../lib/api";
-import { useCallback } from "react";
+import { ApiResponse } from "@/lib/api";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, MessageCircle, Plus, Menu, X, Stethoscope, User, Settings, LogOut, Home, Users, Briefcase, GraduationCap, Building2, Rss, LogIn, UserPlus, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { useUser } from "../hooks/useUser";
+import { apiFetch, apiPost } from "@/lib/api";
 
 // Reusable NavbarItem component
 function NavbarItem({ href, label, active, Icon }: { href: string; label: string; active?: boolean; Icon?: any }) {
@@ -92,9 +93,18 @@ function MessageBar() {
   );
 }
 
+interface ProfileBarProps {
+  user: {
+    name: string;
+    specialty: string;
+    icon: string;
+  };
+  onLogout: () => void;
+}
+
 // Enhanced ProfileBar
-function ProfileBar({ onLogout }: { onLogout: () => void }) {
-  const { name, specialty, icon } = useUser();
+function ProfileBar({user, onLogout }: ProfileBarProps) {
+  const { name, specialty, icon } = user;
 
   return (
     <DropdownMenu>
@@ -141,27 +151,60 @@ function ProfileBar({ onLogout }: { onLogout: () => void }) {
   );
 }
 
+
 export default function Header() {
-  const userStore = useUser();
-  const { name, specialty, icon } = userStore;
-  const clearUser = userStore.clearUser || (() => {});
-  const isLoggedIn = Boolean(name && specialty);
+  
+interface User {
+  name: string;
+  icon: string;
+  specialty: string;
+}
+
+
+ const [user, setUser] = useState<{ name: string; icon: string; specialty: string } | null>(null);
+  const [loading, setLoading] = useState(true); 
+  const fetchedUser = useRef(false);
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleLogout = useCallback(async () => {
+useEffect(() => {
+  (async () => {
     try {
-      await api.post("/auth/logout"); 
+      console.log("Calling /user/getUser...");
+
+      const res = await apiFetch<User>("/user/getUser");
+      console.log("Fetched user:", res);
+
+      setUser(res);
     } catch (err) {
-      // Ignore logout errors (e.g., invalid/expired token)
-      console.warn("Logout API error (ignored):", err);
+      console.error("Failed to fetch user", err);
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
-    clearUser();
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("user-store");
-    }
-    router.push("/");
-  }, [router, clearUser]);
+  })();
+}, []);
+
+
+
+
+  const isLoggedIn = Boolean(user?.name && user?.specialty);
+  console.log("Header user:", user, "isLoggedIn:", isLoggedIn);
+
+const handleLogout = useCallback(async () => {
+  try {
+    const res = await apiPost<ApiResponse<null>>("/auth/logout");
+    console.log("Logout success:", res.message);
+  } catch (err) {
+    console.warn("Logout API error (ignored):", err);
+  }
+
+  setUser(null); // clears frontend state
+  router.push("/");
+}, [router]);
+
+
+
 
   // Define nav items for both states
   const navItemsLoggedIn = [
@@ -176,7 +219,7 @@ export default function Header() {
     { href: "/hospitals", label: "Hospitals", Icon: Building2 },
     //{ href: "/connections", label: "Connections", Icon: Users },
     // { href: "/login", label: "Login", Icon: LogIn },
-    // { href: "/signup", label: "Signup", Icon: UserPlus },
+  // { href: "/signup", label: "Signup", Icon: UserPlus },
   ];
 
   return (
@@ -213,8 +256,8 @@ export default function Header() {
           <div className="flex items-center space-x-3 ">
             {isLoggedIn && <NotificationBar />}
             {isLoggedIn && <MessageBar />}
-            {isLoggedIn && <ProfileBar onLogout={handleLogout} />}
-            {!isLoggedIn && (
+           {isLoggedIn && user && <ProfileBar user={user} onLogout={handleLogout} />}
+            {!isLoggedIn &&  (
               <Link href="/signup" className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-full  hover:bg-blue-700 font-semibold transition ">Sign Up</Link>
             )}
           </div>

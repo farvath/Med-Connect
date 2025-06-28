@@ -1,8 +1,13 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { ApiResponse } from '@/types/apiResponse';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Create an axios instance with default configuration
+if (!BASE_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL is not defined in .env');
+}
+
+// Create Axios instance
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -11,42 +16,63 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Add request logging
+// Request interceptor (optional logging or auth headers)
 api.interceptors.request.use(
   (config) => config,
   (error) => Promise.reject(error)
 );
 
-// Add response logging
+// Response interceptor — keeps full Axios response for `apiFetch`
 api.interceptors.response.use(
-  (response) => response.data,
+  (response) => response, // Keep full response object
   (error) => {
-    return Promise.reject(
-      new Error(error.response?.data?.message || error.message)
-    );
+    const message =
+      error.response?.data?.message || error.message || 'Something went wrong';
+    return Promise.reject(new Error(message));
   }
 );
 
-// Type for API response
-interface ApiResponse<T = any> {
-  data?: T;
-  message?: string;
-}
-
-// API functions
-export async function apiFetch<T>(path: string, options: any = {}): Promise<T> {
-  if (!BASE_URL) {
-    throw new Error('API URL not configured. Check your .env file.');
-  }
+// Generic typed API wrapper
+export async function apiFetch<T>(
+  path: string,
+  options: {
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    data?: any;
+    params?: any;
+    headers?: any;
+  } = {}
+): Promise<T> {
   const { method = 'GET', data, params, headers } = options;
-  return api.request({
+
+  const response: AxiosResponse<ApiResponse<T>> = await api.request({
     url: path,
     method,
     data,
     params,
     headers,
   });
+
+  const body = response.data;
+
+  if (!body.success) {
+    throw new Error(body.message || 'API call failed');
+  }
+
+  return body.data;
 }
 
-// Export the axios instance if needed
+// Shorthand helpers
+export const apiGet = <T>(path: string, params?: any): Promise<T> =>
+  apiFetch<T>(path, { method: 'GET', params });
+
+export const apiPost = <T>(path: string, data?: any): Promise<T> =>
+  apiFetch<T>(path, { method: 'POST', data });
+
+export const apiPut = <T>(path: string, data?: any): Promise<T> =>
+  apiFetch<T>(path, { method: 'PUT', data });
+
+export const apiDelete = <T>(path: string, params?: any): Promise<T> =>
+  apiFetch<T>(path, { method: 'DELETE', params });
+
+// Optionally export Axios instance
 export default api;

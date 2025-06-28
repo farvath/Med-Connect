@@ -1,39 +1,43 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Stethoscope } from "lucide-react"
-import Link from "next/link"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import api from "@/lib/api"
-import { useUser } from "@/hooks/useUser"
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Stethoscope } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { apiPost } from "@/lib/api";
+import { User } from "@/types/user";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const router = useRouter()
-  const { setUser } = useUser()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
+
     try {
-      const res: any = await api.post("/auth/login", { email, password })
-      setUser({
-        name: res.name || "",
-        specialty: res.specialty || "",
-        icon: res.profilePic || ""
-      })
-      console.log("Login setUser:", res)
-      router.push("/feed") // Redirect to feed or dashboard
+      const user: User = await apiPost<User>("/auth/login", { email, password });
+
+
+
+   window.location.href = "/feed";
     } catch (err: any) {
-      setError(err.message || "Login failed")
+      setError(err?.message || "Login failed");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -54,7 +58,9 @@ export default function LoginPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-blue-900">Sign In</CardTitle>
-            <CardDescription>Enter your credentials to access your account</CardDescription>
+            <CardDescription>
+              Enter your credentials to access your account
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -65,7 +71,7 @@ export default function LoginPage() {
                   type="email"
                   placeholder="john.doe@example.com"
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
 
@@ -76,7 +82,7 @@ export default function LoginPage() {
                   type="password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
 
@@ -89,12 +95,18 @@ export default function LoginPage() {
                     Remember me
                   </Label>
                 </div>
-                <Link href="#" className="text-sm text-blue-600 hover:underline">
+                <Link
+                  href="#"
+                  className="text-sm text-blue-600 hover:underline"
+                >
                   Forgot password?
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3">
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+              >
                 Sign In
               </Button>
             </form>
@@ -102,16 +114,17 @@ export default function LoginPage() {
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
-                <Link href="/signup" className="text-blue-600 hover:underline font-medium">
+                <Link
+                  href="/signup"
+                  className="text-blue-600 hover:underline font-medium"
+                >
                   Sign up here
                 </Link>
               </p>
             </div>
           </CardContent>
         </Card>
-
-      
       </div>
     </div>
-  )
+  );
 }
