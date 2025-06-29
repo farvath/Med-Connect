@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { ApiResponse } from '@/types/apiResponse';
+import { ApiResponse } from '@/types/apiResponse'; // Assuming you have this type defined
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -10,9 +10,9 @@ if (!BASE_URL) {
 // Create Axios instance
 const api = axios.create({
   baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // REMOVED: 'Content-Type': 'application/json',
+  // Axios automatically sets 'Content-Type' for FormData,
+  // so we should not hardcode 'application/json' globally.
   withCredentials: true,
 });
 
@@ -37,8 +37,6 @@ api.interceptors.response.use(
   }
 );
 
-
-
 // Generic typed API wrapper
 export async function apiFetch<T>(
   path: string,
@@ -51,13 +49,21 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const { method = 'GET', data, params, headers } = options;
 
-  const response: AxiosResponse<ApiResponse<T>> = await api.request({
+  const requestConfig: AxiosRequestConfig = {
     url: path,
     method,
     data,
     params,
     headers,
-  });
+  };
+
+  // If data is FormData, Axios will automatically set the correct Content-Type header
+  // So, we don't need to manually set it unless it's strictly 'application/json' for non-FormData
+  // For requests that are NOT FormData, you might explicitly set 'application/json' if needed,
+  // but for a general utility, letting Axios handle it based on 'data' type is often best.
+  // For example, if you send a plain object, Axios will default to 'application/json'.
+
+  const response: AxiosResponse<ApiResponse<T>> = await api.request(requestConfig);
 
   const body = response.data;
 

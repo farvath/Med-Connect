@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { signup, login, logout } from '../controllers/authController';
 import multer from "multer";
-const upload = multer(); 
+const upload = multer({ storage: multer.memoryStorage() }); 
+
 
 const router = Router();
 

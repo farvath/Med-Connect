@@ -9,17 +9,20 @@ import { imagekitService } from '../services/imagekitService';
 
 const jwtSecret = process.env.JWT_SECRET as string;
 
-export const signup = async (req: Request, res: Response) => {
-  let uploadedProfilePicUrl: string | null = null; // Initialize to null; will store ImageKit URL if upload succeeds
+// Extend Request type for file upload (from multer)
+interface AuthRequest extends Request {
+  file?: Express.Multer.File;
+}
+
+export const signup = async (req: AuthRequest, res: Response) => {
+  let uploadedProfilePicData: { url: string; fileId: string } | null = null; 
 
   try {
-    // Establish database connection
-    await connectDB();
+    // Assuming connectDB() is called elsewhere or not needed here for every request
+    // await connectDB(); 
 
-    // Destructure user input from the request body.
-    // Multer processes form data and attaches file info to `req.file`.
     const {
-      name,
+     name,
       email,
       password,
       specialty,
@@ -28,58 +31,58 @@ export const signup = async (req: Request, res: Response) => {
       accountType
     } = req.body;
 
-    // `req.file` will contain the uploaded file details if Multer is used,
-    // and `req.file.buffer` will hold the file content if `memoryStorage` is configured.
-    const profilePic = req.file; 
+    const profilePicFile = req.file; // Access the uploaded file via req.file
 
-    // Validate if all required text fields are provided
+    // Basic validation
     if (!name || !email || !password || !specialty || !institution || !location || !accountType) {
-      return res.status(400).json({ message: 'Missing required fields' });
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
 
-    // Check if a user with the provided email already exists to prevent duplicates
-    const existingUser = await getUserByEmail(email);
+    // Check if user with this email already exists
+    // You might have a dedicated service/function for this, e.g., getUserByEmail
+    const existingUser = await User.findOne({ email }); // Using Mongoose directly
     if (existingUser) {
-      return res.status(409).json({ message: 'User with this email already exists' });
+      return res.status(409).json({ success: false, message: 'User with this email already exists' });
     }
 
-    // --- Profile Picture Upload to ImageKit ---
-    // Check if a profile picture was provided and if it contains a buffer (meaning it's in memory)
-    if (profilePic && profilePic.buffer) {
+    // --- Handle profile picture upload ---
+    if (profilePicFile && profilePicFile.buffer) {
       try {
-        // Call the ImageKit service to upload the buffer
         const uploadResult = await imagekitService.upload(
-          profilePic.buffer,         // The file content as a Buffer
-          profilePic.originalname,   // The original filename for ImageKit
-          "/profile-pics"            // Specify a folder in ImageKit for profile pictures
+          profilePicFile.buffer, 
+          profilePicFile.originalname, 
+          "/profile-pics" // Specify folder in ImageKit
         );
-        // Store the URL returned by ImageKit
-        uploadedProfilePicUrl = uploadResult.url; 
-        console.log("Profile picture uploaded to ImageKit. URL:", uploadedProfilePicUrl);
+        // Store both URL and fileId from ImageKit response
+        uploadedProfilePicData = {
+          url: uploadResult.url,
+          fileId: uploadResult.fileId,
+        };
+        console.log("Profile picture uploaded to ImageKit. URL:", uploadedProfilePicData.url);
       } catch (uploadError: any) {
-        // If ImageKit upload fails, log the error but proceed with `null` for the profilePic URL.
-        // You can modify this behavior (e.g., return a 500 error) if a profile pic is mandatory.
         console.error("Failed to upload profile picture to ImageKit:", uploadError.message);
-        uploadedProfilePicUrl = null; // Ensure it's null if upload failed
+        uploadedProfilePicData = null; // Ensure it's null if upload failed
       }
     }
-    // Note: No explicit file cleanup (like `fs.unlink`) is needed here
-    // because Multer's `memoryStorage` does not write temporary files to disk.
-    // --- End Profile Picture Upload ---
-
-    // Hash the user's password securely before storing it
+ 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create the new user record in the database
+    // Create the new user record in the database with new fields
     const user = await User.create({
-      name,
+     name    ,
       email,
       password: hashedPassword,
       specialty,
       institution,
       location,
       accountType,
-      profilePic: uploadedProfilePicUrl, // Store the ImageKit URL or null in the database
+      profilePic: uploadedProfilePicData, // Store the object {url, fileId} or null
+      // New fields like headline, bio, education, experience will be empty arrays/null initially
+      // as they are not part of the signup form, but are optional in schema
+      headline: '', // Initialize as empty string or undefined if preferred
+      bio: '',
+      education: [],
+      experience: [],
     });
 
     // Ensure JWT_SECRET is available for token generation
@@ -87,48 +90,47 @@ export const signup = async (req: Request, res: Response) => {
       throw new Error('JWT_SECRET is not defined in the environment variables. Please set it.');
     }
 
-    // Generate access and refresh tokens for the newly signed-up user
-    const accessToken = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '3h' }); // Access token expires in 3 hours
-    const refreshToken = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '7d' }); // Refresh token expires in 7 days
+    // Generate access and refresh tokens
+    const accessToken = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '3h' });
+    const refreshToken = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '7d' });
 
-    // Set HTTP-only cookies for tokens.
-    // `httpOnly: true` prevents client-side JavaScript access.
-    // `sameSite: 'strict'` helps mitigate CSRF attacks.
-    // `secure: true` ensures cookies are only sent over HTTPS (recommended for production).
+    // Set HTTP-only cookies for tokens
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       sameSite: 'strict',
-      secure: process.env.NODE_ENV === 'production', // Set to true only in production over HTTPS
-      maxAge: 3 * 60 * 60 * 1000, // 3 hours in milliseconds
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 3 * 60 * 60 * 1000, // 3 hours
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       sameSite: 'strict',
-      secure: process.env.NODE_ENV === 'production', // Set to true only in production over HTTPS
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     // Send a success response back to the client
     res.status(201).json({
+      success: true, // Added success flag for consistency
       message: "Signup successful",
       user: {
         id: user._id,
         email: user.email,
-        name: user.name,
-        profilePic: user.profilePic // Include the profile pic URL in the response
+        firstName: user.name,
+        profilePic: user.profilePic // Include the full profilePic object
       }
     });
 
   } catch (error: any) {
-    // Log and send an error response if any part of the signup process fails
     console.error("Signup failed:", error);
     res.status(500).json({
+      success: false,
       message: error?.message || "Signup failed",
-      error: error?.toString?.() || error, // Provide more details for debugging
+      error: error?.toString?.() || error,
     });
   }
 };
+
 
 export const login = async (req: Request, res: Response) => {
   try {

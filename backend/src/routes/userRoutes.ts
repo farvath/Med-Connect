@@ -1,10 +1,18 @@
 import { Router } from 'express';
-import { getUser } from '../controllers/userController';
+import { getUser,updateUser  } from '../controllers/userController';
 import { authMiddleware } from '../middleware/authMiddleware';
+import multer from "multer";
+
+const upload = multer();
 const router = Router();
 
-// Signup
+
+// getUser route to fetch user details
 router.get('/getUser', authMiddleware, getUser);
+
+router.put('/updateUser', authMiddleware ,upload.single('profilePic'), updateUser);
+
 
 
 export default router;
+
