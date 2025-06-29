@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { getUserByEmail } from '../services/userService';
 import { connectDB } from '../services/db';
+import User from '../models/User';
 
 
 const jwtSecret = process.env.JWT_SECRET as string;
@@ -36,7 +37,7 @@ export const signup = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await (await import('../models/User')).default.create({
+    const user = await User.create({
       name,
       email,
       password: hashedPassword,
