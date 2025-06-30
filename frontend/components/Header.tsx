@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import api from "../lib/api";
-import { useCallback } from "react";
+// Assuming ApiResponse is defined in "@/types/apiResponse" and IUserProfile in "@/types/user"
+import { ApiResponse } from "@/types/apiResponse";
+import { IUserProfile, IProfilePic } from "@/types/user"; // Import your specific types
+
+import { useCallback, useEffect, useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +14,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, MessageCircle, Plus, Menu, X, Stethoscope, User, Settings, LogOut, Home, Users, Briefcase, GraduationCap, Building2, Rss, LogIn, UserPlus, ChevronDown } from "lucide-react";
 import Image from "next/image";
-import { useUser } from "../hooks/useUser";
+// Import apiFetch and apiPost (your main API utility functions)
+import { apiFetch, apiPost } from "@/lib/api";
 
 // Reusable NavbarItem component
 function NavbarItem({ href, label, active, Icon }: { href: string; label: string; active?: boolean; Icon?: any }) {
@@ -92,20 +96,35 @@ function MessageBar() {
   );
 }
 
+interface ProfileBarProps {
+  user: {
+    name: string;
+    specialty: string;
+    profilePicUrl?: string;
+  };
+  onLogout: () => void;
+}
+
 // Enhanced ProfileBar
-function ProfileBar({ onLogout }: { onLogout: () => void }) {
-  const { name, specialty, icon } = useUser();
+function ProfileBar({ user, onLogout }: ProfileBarProps) {
+  const { name, specialty, profilePicUrl } = user;
+
+  const router = useRouter();
+
+  const handleProfileClick = () => {
+    router.push('/profile');
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="flex items-center gap-2 cursor-pointer group p-1 rounded-full hover:bg-blue-50 transition-all">
-            <Avatar className="h-9 w-9 ring-2 ring-white shadow-lg">
-            <AvatarImage src={icon || "https://ui-avatars.com/api/?name=" + encodeURIComponent(name || "User") + "&background=0D8ABC&color=fff"} alt="Profile" />
+          <Avatar className="h-9 w-9 ring-2 ring-white shadow-lg">
+            <AvatarImage src={profilePicUrl || "https://ui-avatars.com/api/?name=" + encodeURIComponent(name || "User") + "&background=0D8ABC&color=fff"} alt="Profile" />
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-bold">{name ? name[0] : "P"}</AvatarFallback>
-            </Avatar>
+          </Avatar>
           <span className="hidden md:block font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{name}</span>
-           </div>
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className="w-56 rounded-2xl shadow-xl border-gray-200 bg-white/95 backdrop-blur-lg"
@@ -116,7 +135,7 @@ function ProfileBar({ onLogout }: { onLogout: () => void }) {
           <p className="font-semibold text-gray-900">{name || ""}</p>
           <p className="text-sm text-gray-600">{specialty || ""}</p>
         </div>
-        <DropdownMenuItem className="rounded-xl p-2.5 hover:bg-blue-50 transition-colors duration-200 cursor-pointer">
+         <DropdownMenuItem className="rounded-xl p-2.5 hover:bg-blue-50 transition-colors duration-200 cursor-pointer" onClick={handleProfileClick}>
           <User className="mr-3 h-5 w-5 text-blue-600" />
           <span className="font-medium">My Profile</span>
         </DropdownMenuItem>
@@ -141,27 +160,58 @@ function ProfileBar({ onLogout }: { onLogout: () => void }) {
   );
 }
 
+
 export default function Header() {
-  const userStore = useUser();
-  const { name, specialty, icon } = userStore;
-  const clearUser = userStore.clearUser || (() => {});
-  const isLoggedIn = Boolean(name && specialty);
+
+  // State for the user object, containing only necessary fields for the Header
+  const [user, setUser] = useState<{ name: string; specialty: string; profilePicUrl?: string } | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
+  useEffect(() => {
+    (async () => {
+      try {
+        // apiFetch<IUserProfile> expects ApiResponse<IUserProfile> and returns IUserProfile
+        const res: IUserProfile = await apiFetch<IUserProfile>("/user/getUser");
+        console.log("API Response (unwrapped by apiFetch):", res); // This should now directly be IUserProfile
+
+        if (res && res.name && res.specialty) { // Check for essential properties
+          const userDataForState = {
+            name: res.name,
+            specialty: res.specialty,
+            profilePicUrl: res.profilePic?.url, // Access nested url
+          };
+          console.log("User data set to state:", userDataForState);
+          setUser(userDataForState);
+        } else {
+          console.log("API response data was null/undefined or missing essential fields.", res);
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Error fetching user:", err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const isLoggedIn = Boolean(user?.name && user?.specialty);
+  console.log("Render - isLoggedIn:", isLoggedIn, "User state (for render):", user);
+
   const handleLogout = useCallback(async () => {
     try {
-      await api.post("/auth/logout"); 
+      // Assuming apiPost for logout also returns ApiResponse<null>
+      const res = await apiPost<ApiResponse<null>>("/auth/logout");
+      console.log("Logout success:", res.message);
     } catch (err) {
-      // Ignore logout errors (e.g., invalid/expired token)
       console.warn("Logout API error (ignored):", err);
     }
-    clearUser();
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("user-store");
-    }
+
+    setUser(null); // clears frontend state
     router.push("/");
-  }, [router, clearUser]);
+  }, [router]);
 
   // Define nav items for both states
   const navItemsLoggedIn = [
@@ -174,9 +224,6 @@ export default function Header() {
     { href: "/jobs", label: "Jobs", Icon: Briefcase },
     { href: "/colleges", label: "Colleges", Icon: GraduationCap },
     { href: "/hospitals", label: "Hospitals", Icon: Building2 },
-    //{ href: "/connections", label: "Connections", Icon: Users },
-    // { href: "/login", label: "Login", Icon: LogIn },
-    // { href: "/signup", label: "Signup", Icon: UserPlus },
   ];
 
   return (
@@ -207,13 +254,13 @@ export default function Header() {
                 Icon={item.Icon}
               />
             ))}
-         </nav>
+          </nav>
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-3 ">
             {isLoggedIn && <NotificationBar />}
             {isLoggedIn && <MessageBar />}
-            {isLoggedIn && <ProfileBar onLogout={handleLogout} />}
+            {isLoggedIn && user && <ProfileBar user={user} onLogout={handleLogout} />}
             {!isLoggedIn && (
               <Link href="/signup" className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-full  hover:bg-blue-700 font-semibold transition ">Sign Up</Link>
             )}

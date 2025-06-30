@@ -11,8 +11,8 @@ import Link from "next/link"
 import { useState, useRef, useEffect } from "react"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { apiFetch } from "@/lib/api"
+import { cn } from "@/lib/utils" // Assuming this is for utility functions
+import { apiFetch, apiPost } from "@/lib/api" // Import apiPost for cleaner usage
 import { useRouter } from "next/navigation"
 
 export default function SignupPage() {
@@ -24,7 +24,8 @@ export default function SignupPage() {
   const [selectedSpecialty, setSelectedSpecialty] = useState("")
   const [selectedInstitution, setSelectedInstitution] = useState("")
   const [selectedLocation, setSelectedLocation] = useState("")
-  const [form, setForm] = useState({ name: "", email: "", password: "" })
+  // Adjusted form state to remove 'name' and accommodate email/password for general form input
+  const [form, setForm] = useState({ email: "", password: "" }) // Removed 'name'
   const [error, setError] = useState<string | null>(null)
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -46,7 +47,7 @@ export default function SignupPage() {
     { id: "special", text: "At least one special character", met: /[!@#$%^&*(),.?":{}|<>]/.test(password) },
   ]
 
-  const passwordsMatch = password === confirmPassword && password !== ""
+  const passwordsMatch = password === confirmPassword && password !== "" && passwordRequirements.every(req => req.met)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -57,68 +58,63 @@ export default function SignupPage() {
     if (file) {
       setProfilePic(file);
       setProfilePicPreview(URL.createObjectURL(file));
+    } else {
+      setProfilePic(null);
+      setProfilePicPreview("");
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    
-    // Validation
-    if (!agreed) {
-      setError("You must agree to the Terms of Service and Privacy Policy.");
-      return;
-    }
-    
-    if (!firstName || !lastName || !selectedSpecialty || !selectedInstitution || !selectedLocation || !accountType) {
-      setError("Please fill in all required fields.");
-      return;
-    }
-    
-    if (!passwordsMatch) {
-      setError("Passwords do not match.");
-      return;
-    }
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError(null);
 
-    const signupData = {
-      name: `${firstName} ${lastName}`.trim(),
-      email: form.email,
-      password,
-      specialty: selectedSpecialty,
-      institution: selectedInstitution,
-      location: selectedLocation,
-      accountType,
-      // profilePic will be handled separately
-    };
+  if (!agreed) {
+    setError("You must agree to the Terms of Service and Privacy Policy.");
+    return;
+  }
 
-    try {
-      let response;
-      if (profilePic) {
-        const formData = new FormData();
-        Object.entries(signupData).forEach(([key, value]) => formData.append(key, value as string));
-        formData.append("profilePic", profilePic);
-        response = await apiFetch("/auth/signup", {
-          method: "POST",
-          data: formData,
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else {
-        response = await apiFetch("/auth/signup", {
-          method: "POST",
-          data: signupData,
-        });
-      }
-      // On success, redirect to login page
-      router.push("/login");
-    } catch (err: any) {
-      // If account already exists, redirect to login page
-      if (err.message && err.message.toLowerCase().includes("already registered")) {
-        router.push("/login");
-        return;
-      }
-      setError(err.message);
+  if (!firstName || !lastName || !selectedSpecialty || !selectedInstitution || !selectedLocation || !accountType) {
+    setError("Please fill in all required fields.");
+    return;
+  }
+
+  if (!passwordsMatch) {
+    setError("Passwords do not match or do not meet requirements.");
+    return;
+  }
+
+  // Create FormData object for sending multipart/form-data
+  const formData = new FormData();
+  formData.append("name", firstName + " " + lastName); 
+  formData.append("email", form.email);
+  formData.append("password", password); // Use the individual password state
+  formData.append("specialty", selectedSpecialty);
+  formData.append("institution", selectedInstitution);
+  formData.append("location", selectedLocation);
+  formData.append("accountType", accountType);
+
+  // Append profile picture if selected
+  if (profilePic) {
+    formData.append("profilePic", profilePic);
+  }
+  // No need for 'else { formData.append("profilePic", ""); }' as backend handles null/undefined/missing.
+  // Sending an empty string for a file input can sometimes be misinterpreted.
+  // It's better to just not append the field if no file is selected.
+
+  try {
+    // Use apiPost and let it handle the Content-Type for FormData automatically
+    await apiPost("/auth/signup", formData);
+
+    router.push("/login");
+  } catch (err: any) {
+    if (err.message?.toLowerCase().includes("already exists") || err.message?.toLowerCase().includes("already registered")) {
+      setError("User with this email already exists. Redirecting to login...");
+      setTimeout(() => router.push("/login"), 2000); // Redirect after a short delay
+      return;
     }
-  };
+    setError(err.message);
+  }
+};
 
   useEffect(() => {
     async function fetchLookups() {
@@ -132,7 +128,8 @@ export default function SignupPage() {
         setInstitutions(institutionsRes.map((i) => i.name));
         setIndianCities(citiesRes.map((c) => c.name));
       } catch (err) {
-        // Optionally handle error
+        console.error("Failed to fetch lookup data:", err); // Log lookup errors
+        // Optionally show a user-friendly message about lookup data failing to load
       }
     }
     fetchLookups();
