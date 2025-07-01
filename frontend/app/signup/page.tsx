@@ -13,6 +13,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils" // Assuming this is for utility functions
 import { apiFetch, apiPost } from "@/lib/api" // Import apiPost for cleaner usage
+import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 
 export default function SignupPage() {
@@ -38,6 +39,7 @@ export default function SignupPage() {
   const [indianCities, setIndianCities] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { refreshUser } = useAuth();
 
   const passwordRequirements = [
     { id: "length", text: "At least 8 characters", met: password.length >= 8 },
@@ -105,7 +107,11 @@ const handleSubmit = async (e: React.FormEvent) => {
     // Use apiPost and let it handle the Content-Type for FormData automatically
     await apiPost("/auth/signup", formData);
 
-    router.push("/login");
+    // Refresh auth context to get the new user data
+    await refreshUser();
+    
+    // Redirect to dashboard/feed instead of login since user is now logged in
+    router.push("/feed");
   } catch (err: any) {
     if (err.message?.toLowerCase().includes("already exists") || err.message?.toLowerCase().includes("already registered")) {
       setError("User with this email already exists. Redirecting to login...");

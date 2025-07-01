@@ -8,7 +8,8 @@ import institutionsRoutes from './routes/institutionsRoutes';
 import lookupRoutes from './routes/lookupRoutes';
 import userRoutes from './routes/userRoutes';
 import { connectDB } from './services/db';
-// import other route files as you migrate them
+import collegeRoutes from './routes/collegeRoutes';
+import { seedColleges } from './utils/seedColleges';
 
 const app = express();
 const PORT = process.env.PORT ;
@@ -22,7 +23,7 @@ app.use(cors({
 
 
 connectDB()
-  .then(() => {
+  .then(async () => {
     console.log(" MongoDB connected");
 
     // Mount routes
@@ -30,6 +31,7 @@ connectDB()
     app.use('/api/institutions', institutionsRoutes);
     app.use('/api/lookup', lookupRoutes);
     app.use('/api/user', userRoutes);
+    app.use("/api/colleges", collegeRoutes )
 
     app.listen(PORT, () => {
       console.log(` Express server running on http://localhost:${PORT}`);

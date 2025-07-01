@@ -16,24 +16,27 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiPost } from "@/lib/api";
-import { User } from "@/types/user";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const { refreshUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     try {
-      const user: User = await apiPost<User>("/auth/login", { email, password });
-
-
-
-   window.location.href = "/feed";
+      await apiPost("/auth/login", { email, password });
+      
+      // Refresh the auth context to get user data
+      await refreshUser();
+      
+      // Navigate to feed page
+      router.push("/feed");
     } catch (err: any) {
       setError(err?.message || "Login failed");
     }
