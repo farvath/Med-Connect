@@ -180,6 +180,7 @@ export default function Header() {
   const navItemsLoggedIn = [
     { href: "/feed", label: "Feed", Icon: Rss },
     { href: "/connections", label: "Connections", Icon: Users },
+     { href: "/colleges", label: "Colleges", Icon: GraduationCap },
     { href: "/jobs", label: "Jobs", Icon: Briefcase },
   ];
   const navItemsLoggedOut = [
@@ -207,7 +208,7 @@ export default function Header() {
           {isLoggedIn && <SearchBar />}
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-6 ">
+          <nav className="hidden lg:flex items-center space-x-3 ">
             {(isLoggedIn ? navItemsLoggedIn : navItemsLoggedOut).map((item) => (
               <NavbarItem
                 key={item.href}
