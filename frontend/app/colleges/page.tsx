@@ -366,7 +366,7 @@ export default function CollegesPage() {
         {/* College Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {colleges.map((college) => (
-            <Card key={college._id} className="overflow-hidden hover:shadow-lg transition-shadow">
+            <Card key={college._id} onClick={() => handleViewDetails(college._id)} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
               <div className="relative h-48">
                 <Image
                   src={college.imageUrl}
