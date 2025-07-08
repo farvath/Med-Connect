@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes';
 import institutionsRoutes from './routes/institutionsRoutes';
 import lookupRoutes from './routes/lookupRoutes';
 import userRoutes from './routes/userRoutes';
+import connectionRoutes from './routes/connectionRoutes';
 import { connectDB } from './services/db';
 import collegeRoutes from './routes/collegeRoutes';
 import { seedColleges } from './utils/seedColleges';
@@ -31,7 +32,8 @@ connectDB()
     app.use('/api/institutions', institutionsRoutes);
     app.use('/api/lookup', lookupRoutes);
     app.use('/api/user', userRoutes);
-    app.use("/api/colleges", collegeRoutes )
+    app.use("/api/colleges", collegeRoutes);
+    app.use("/api/connections", connectionRoutes);
 
     app.listen(PORT, () => {
       console.log(` Express server running on http://localhost:${PORT}`);
