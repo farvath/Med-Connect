@@ -24,17 +24,29 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response, // Keep full response
+  (response) => response,
   (error) => {
     const status = error.response?.status;
-    const message =
-      error.response?.data?.message || error.message || "Something went wrong";
+    const message = error.response?.data?.message || error.message || "Something went wrong";
 
-    const err = new Error(message) as Error & { status?: number };
-    err.status = status;
+    // Create enhanced error object
+    const enhancedError = new Error(message) as Error & { 
+      status?: number;
+      isAuthError?: boolean;
+    };
+    enhancedError.status = status;
+    enhancedError.isAuthError = status === 401;
 
-    // ⚠️ Do NOT console.log or throw extra info
-    return Promise.reject(err);
+    // Completely suppress 401 errors from console
+    if (status === 401) {
+      // Don't log anything for auth errors
+      return Promise.reject(enhancedError);
+    }
+
+    // For other errors, you can optionally log them
+    // console.error('API Error:', status, message);
+
+    return Promise.reject(enhancedError);
   }
 );
 
@@ -88,6 +100,34 @@ export const apiPut = <T>(path: string, data?: any): Promise<T> =>
 export const apiDelete = <T>(path: string, params?: any): Promise<T> =>
   apiFetch<T>(path, { method: 'DELETE', params });
 
+// Safe authentication check that doesn't throw on 401 errors
+export async function checkAuth(): Promise<any | null> {
+  try {
+    return await apiFetch<any>('/user/getUser');
+  } catch (error: any) {
+    // Return null for auth errors (401) instead of throwing
+    if (error.status === 401 || error.isAuthError) {
+      return null;
+    }
+    // Re-throw other errors (but don't log them)
+    throw error;
+  }
+}
+
+// Generic wrapper to suppress 401 errors for any API call
+export async function safeApiCall<T>(apiCall: () => Promise<T>): Promise<T | null> {
+  try {
+    return await apiCall();
+  } catch (error: any) {
+    // Return null for auth errors instead of throwing
+    if (error.status === 401 || error.isAuthError) {
+      return null;
+    }
+    // Re-throw other errors
+    throw error;
+  }
+}
+
 // Hospital API functions
 export const getHospitals = (params?: {
   page?: number;
@@ -108,6 +148,10 @@ export const getHospitalSpecialties = (): Promise<HospitalSpecialtiesResponse['d
 
 export const getHospitalLocations = (): Promise<HospitalLocationsResponse['data']> =>
   apiGet<HospitalLocationsResponse['data']>('/hospitals/meta/locations');
+
+// User API functions
+export const updateUser = (data: any): Promise<any> =>
+  apiPut<any>('/user/updateUser', data);
 
 // Optionally export Axios instance
 export default api;

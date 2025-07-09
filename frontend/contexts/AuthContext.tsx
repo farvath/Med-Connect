@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { IUserProfile } from '@/types/user';
-import { apiFetch } from '@/lib/api';
+import { checkAuth } from '@/lib/api';
 
 interface AuthContextType {
   user: IUserProfile | null;
@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchUser = async () => {
     try {
       setLoading(true);
-      const res: IUserProfile = await apiFetch<IUserProfile>("/user/getUser");
+      const res: IUserProfile | null = await checkAuth();
       
       if (res && res.name && res.specialty) {
         // Format dates for form inputs if they exist
@@ -46,7 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
       }
     } catch (err) {
-      console.error("Error fetching user:", err);
+      // Completely suppress authentication errors (401)
+      const error = err as any;
+      if (error?.status !== 401 && !error?.isAuthError) {
+        console.error("Error fetching user:", err);
+      }
       setUser(null);
     } finally {
       setLoading(false);
