@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ApiResponse } from '@/types/apiResponse'; // Assuming you have this type defined
+import { HospitalListResponse, HospitalResponse, HospitalSpecialtiesResponse, HospitalLocationsResponse } from '@/types/hospitals';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -86,6 +87,27 @@ export const apiPut = <T>(path: string, data?: any): Promise<T> =>
 
 export const apiDelete = <T>(path: string, params?: any): Promise<T> =>
   apiFetch<T>(path, { method: 'DELETE', params });
+
+// Hospital API functions
+export const getHospitals = (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  location?: string;
+  specialty?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}): Promise<HospitalListResponse['data']> =>
+  apiGet<HospitalListResponse['data']>('/hospitals', params);
+
+export const getHospitalById = (id: string): Promise<HospitalResponse['data']> =>
+  apiGet<HospitalResponse['data']>(`/hospitals/${id}`);
+
+export const getHospitalSpecialties = (): Promise<HospitalSpecialtiesResponse['data']> =>
+  apiGet<HospitalSpecialtiesResponse['data']>('/hospitals/meta/specialties');
+
+export const getHospitalLocations = (): Promise<HospitalLocationsResponse['data']> =>
+  apiGet<HospitalLocationsResponse['data']>('/hospitals/meta/locations');
 
 // Optionally export Axios instance
 export default api;

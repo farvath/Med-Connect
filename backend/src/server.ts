@@ -10,7 +10,9 @@ import userRoutes from './routes/userRoutes';
 import connectionRoutes from './routes/connectionRoutes';
 import { connectDB } from './services/db';
 import collegeRoutes from './routes/collegeRoutes';
+import hospitalRoutes from './routes/hospitalRoutes';
 import { seedColleges } from './utils/seedColleges';
+import { seedHospitals } from './utils/seedHospitals';
 
 const app = express();
 const PORT = process.env.PORT ;
@@ -27,12 +29,16 @@ connectDB()
   .then(async () => {
     console.log(" MongoDB connected");
 
+    // Seed data
+    await seedHospitals();
+
     // Mount routes
     app.use('/api/auth', authRoutes);
     app.use('/api/institutions', institutionsRoutes);
     app.use('/api/lookup', lookupRoutes);
     app.use('/api/user', userRoutes);
     app.use("/api/colleges", collegeRoutes);
+    app.use("/api/hospitals", hospitalRoutes);
     app.use("/api/connections", connectionRoutes);
 
     app.listen(PORT, () => {

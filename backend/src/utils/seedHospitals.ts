@@ -1,0 +1,301 @@
+import { HospitalModel } from '../models/Hospital';
+
+export const seedHospitals = async () => {
+  try {
+    // Check if hospitals already exist
+    const existingHospitals = await HospitalModel.countDocuments();
+    if (existingHospitals > 0) {
+      console.log('Hospitals already seeded. Skipping...');
+      return;
+    }
+
+    const hospitals = [
+      {
+        name: "Apollo Hospitals",
+        imageUrl: "/placeholder.jpg",
+        type: "Multi-specialty Healthcare",
+        location: "Pan India",
+        branches: 70,
+        features: {
+          beds: 10000,
+          employees: 50000,
+          doctors: 8000,
+          staff: 42000,
+          departments: 60,
+          icuBeds: 2000,
+          emergencyServices: true,
+          ambulanceService: true,
+          bloodBank: true,
+          pharmacy: true,
+          cafeteria: true,
+          parkingSpaces: 5000
+        },
+        rating: 4.8,
+        reviews: "2.1k reviews",
+        specialties: ["Cardiology", "Oncology", "Transplants", "Neurology", "Orthopedics"],
+        details: {
+          established: "1983",
+          founders: ["Dr. Prathap C. Reddy"],
+          vision: "To touch a billion lives through compassionate and innovative healthcare solutions",
+          mission: "To be the most trusted healthcare provider in Asia and to improve the quality of life of people through our commitment to healthcare",
+          accreditations: ["JCI", "NABH", "NABL"],
+          awards: ["India's Best Hospital Chain", "Excellence in Healthcare"],
+          website: "https://www.apollohospitals.com",
+          emergencyNumber: "1066",
+          generalNumber: "+91-40-23607777",
+          email: "info@apollohospitals.com",
+          address: "21, Greams Lane, Off Greams Road",
+          city: "Chennai",
+          state: "Tamil Nadu",
+          pincode: "600006",
+          operatingHours: "24/7",
+          emergencyHours: "24/7",
+          facilities: ["Emergency Care", "ICU", "Blood Bank", "Pharmacy", "Cafeteria", "Free WiFi", "Parking"],
+          departments: ["Cardiology", "Oncology", "Neurology", "Orthopedics", "Transplants", "Emergency"],
+          medicalEquipment: ["MRI", "CT Scan", "PET Scan", "Cath Lab", "Linear Accelerator"],
+          insuranceAccepted: ["Mediclaim", "Cashless", "Corporate Insurance"],
+          socialMedia: {
+            facebook: "https://facebook.com/apollohospitals",
+            twitter: "https://twitter.com/apollohospitals",
+            instagram: "https://instagram.com/apollohospitals"
+          }
+        }
+      },
+      {
+        name: "Fortis Healthcare",
+        imageUrl: "/placeholder.jpg",
+        type: "Integrated Healthcare",
+        location: "India",
+        branches: 36,
+        features: {
+          beds: 4000,
+          employees: 23000,
+          doctors: 3500,
+          staff: 19500,
+          departments: 45,
+          icuBeds: 800,
+          emergencyServices: true,
+          ambulanceService: true,
+          bloodBank: true,
+          pharmacy: true,
+          cafeteria: true,
+          parkingSpaces: 2500
+        },
+        rating: 4.7,
+        reviews: "1.8k reviews",
+        specialties: ["Neurology", "Orthopedics", "Emergency", "Cardiology", "Oncology"],
+        details: {
+          established: "2001",
+          founders: ["Malvinder Singh", "Shivinder Singh"],
+          vision: "To be the most trusted healthcare provider delivering world-class health services",
+          mission: "Our mission is to deliver world-class healthcare solutions to our patients and communities",
+          accreditations: ["JCI", "NABH"],
+          awards: ["Best Healthcare Provider", "Excellence in Patient Care"],
+          website: "https://www.fortishealthcare.com",
+          emergencyNumber: "102",
+          generalNumber: "+91-11-47135000",
+          email: "enquiry@fortishealthcare.com",
+          address: "Sector 62, Phase VIII",
+          city: "Mohali",
+          state: "Punjab",
+          pincode: "160062",
+          operatingHours: "24/7",
+          emergencyHours: "24/7",
+          facilities: ["Emergency Care", "ICU", "Blood Bank", "Pharmacy", "Cafeteria", "Free WiFi"],
+          departments: ["Neurology", "Orthopedics", "Emergency", "Cardiology", "Oncology"],
+          medicalEquipment: ["MRI", "CT Scan", "Cath Lab", "Gamma Knife"],
+          insuranceAccepted: ["Mediclaim", "Cashless", "TPA"]
+        }
+      },
+      {
+        name: "Max Healthcare",
+        imageUrl: "/placeholder.jpg",
+        type: "Super Specialty Care",
+        location: "North India",
+        branches: 17,
+        features: {
+          beds: 3500,
+          employees: 15000,
+          doctors: 2800,
+          staff: 12200,
+          departments: 40,
+          icuBeds: 700,
+          emergencyServices: true,
+          ambulanceService: true,
+          bloodBank: true,
+          pharmacy: true,
+          cafeteria: true,
+          parkingSpaces: 2000
+        },
+        rating: 4.6,
+        reviews: "1.5k reviews",
+        specialties: ["Emergency", "Pediatrics", "Maternity", "Cardiology", "Orthopedics"],
+        details: {
+          established: "2000",
+          founders: ["Analjit Singh"],
+          vision: "To provide world-class healthcare services with compassion and excellence",
+          mission: "To be India's most trusted healthcare provider",
+          accreditations: ["JCI", "NABH", "NABL"],
+          awards: ["Best Multi-Specialty Hospital", "Excellence in Emergency Care"],
+          website: "https://www.maxhealthcare.in",
+          emergencyNumber: "1800-102-4644",
+          generalNumber: "+91-11-26692251",
+          email: "info@maxhealthcare.com",
+          address: "1, Press Enclave Road, Saket",
+          city: "New Delhi",
+          state: "Delhi",
+          pincode: "110017",
+          operatingHours: "24/7",
+          emergencyHours: "24/7",
+          facilities: ["Emergency Care", "ICU", "NICU", "Blood Bank", "Pharmacy"],
+          departments: ["Emergency", "Pediatrics", "Maternity", "Cardiology", "Orthopedics"],
+          medicalEquipment: ["MRI", "CT Scan", "PET Scan", "Mammography"],
+          insuranceAccepted: ["Mediclaim", "Cashless", "Corporate"]
+        }
+      },
+      {
+        name: "Manipal Hospitals",
+        imageUrl: "/placeholder.jpg",
+        type: "Multi-specialty Healthcare",
+        location: "Pan India",
+        branches: 28,
+        features: {
+          beds: 6000,
+          employees: 30000,
+          doctors: 4000,
+          staff: 26000,
+          departments: 35,
+          icuBeds: 1200,
+          emergencyServices: true,
+          ambulanceService: true,
+          bloodBank: true,
+          pharmacy: true,
+          cafeteria: true,
+          parkingSpaces: 3000
+        },
+        rating: 4.5,
+        reviews: "1.2k reviews",
+        specialties: ["Gastroenterology", "Nephrology", "Pulmonology", "Cardiology", "Oncology"],
+        details: {
+          established: "1953",
+          founders: ["Dr. T.M.A. Pai"],
+          vision: "To be a leading healthcare provider committed to quality and affordability",
+          mission: "To provide comprehensive healthcare services with excellence and compassion",
+          accreditations: ["JCI", "NABH"],
+          awards: ["Best Hospital Chain", "Excellence in Patient Safety"],
+          website: "https://www.manipalhospitals.com",
+          emergencyNumber: "108",
+          generalNumber: "+91-80-25023200",
+          email: "info@manipalhospitals.com",
+          address: "HAL Airport Road",
+          city: "Bangalore",
+          state: "Karnataka",
+          pincode: "560017",
+          operatingHours: "24/7",
+          emergencyHours: "24/7",
+          facilities: ["Emergency Care", "ICU", "Blood Bank", "Pharmacy", "Cafeteria"],
+          departments: ["Gastroenterology", "Nephrology", "Pulmonology", "Cardiology"],
+          medicalEquipment: ["MRI", "CT Scan", "Endoscopy", "Dialysis"],
+          insuranceAccepted: ["Mediclaim", "Cashless"]
+        }
+      },
+      {
+        name: "AIIMS Delhi",
+        imageUrl: "/placeholder.jpg",
+        type: "Government Multi-specialty",
+        location: "New Delhi",
+        branches: 1,
+        features: {
+          beds: 2478,
+          employees: 8000,
+          doctors: 1200,
+          staff: 6800,
+          departments: 42,
+          icuBeds: 500,
+          emergencyServices: true,
+          ambulanceService: true,
+          bloodBank: true,
+          pharmacy: true,
+          cafeteria: true,
+          parkingSpaces: 1500
+        },
+        rating: 4.9,
+        reviews: "3.5k reviews",
+        specialties: ["All Specialties", "Research", "Teaching", "Trauma", "Cardiology"],
+        details: {
+          established: "1956",
+          founders: ["Government of India"],
+          vision: "To promote the highest standard of teaching and research in all branches of medicine",
+          mission: "To provide comprehensive healthcare and advance medical research",
+          accreditations: ["NABH", "ISO"],
+          awards: ["India's Best Medical Institution", "Excellence in Medical Education"],
+          website: "https://www.aiims.edu",
+          emergencyNumber: "1099",
+          generalNumber: "+91-11-26588500",
+          email: "info@aiims.ac.in",
+          address: "Ansari Nagar",
+          city: "New Delhi",
+          state: "Delhi",
+          pincode: "110029",
+          operatingHours: "24/7",
+          emergencyHours: "24/7",
+          facilities: ["Emergency Care", "Trauma Center", "Research Labs", "Medical College"],
+          departments: ["All Medical Specialties", "Research", "Teaching"],
+          medicalEquipment: ["Advanced MRI", "CT Scan", "PET Scan", "Research Equipment"],
+          insuranceAccepted: ["Government Schemes", "ESI", "CGHS"]
+        }
+      },
+      {
+        name: "Tata Memorial Hospital",
+        imageUrl: "/placeholder.jpg",
+        type: "Cancer Specialty",
+        location: "Mumbai",
+        branches: 3,
+        features: {
+          beds: 629,
+          employees: 4500,
+          doctors: 800,
+          staff: 3700,
+          departments: 15,
+          icuBeds: 100,
+          emergencyServices: true,
+          ambulanceService: true,
+          bloodBank: true,
+          pharmacy: true,
+          cafeteria: true,
+          parkingSpaces: 800
+        },
+        rating: 4.8,
+        reviews: "2.8k reviews",
+        specialties: ["Oncology", "Radiation Therapy", "Surgical Oncology", "Hematology", "Palliative Care"],
+        details: {
+          established: "1941",
+          founders: ["Sir Dorabji Tata Trust"],
+          vision: "To be a world-class comprehensive cancer centre",
+          mission: "To provide affordable cancer care and advance cancer research",
+          accreditations: ["JCI", "NABH", "NABL"],
+          awards: ["Best Cancer Hospital", "Excellence in Oncology"],
+          website: "https://tmc.gov.in",
+          emergencyNumber: "022-24177000",
+          generalNumber: "+91-22-24177000",
+          email: "info@tmc.gov.in",
+          address: "Dr. E Borges Road, Parel",
+          city: "Mumbai",
+          state: "Maharashtra",
+          pincode: "400012",
+          operatingHours: "24/7",
+          emergencyHours: "24/7",
+          facilities: ["Cancer Care", "Radiation Therapy", "Chemotherapy", "Research"],
+          departments: ["Oncology", "Radiation", "Surgery", "Hematology"],
+          medicalEquipment: ["Linear Accelerators", "PET-CT", "MRI", "Gamma Knife"],
+          insuranceAccepted: ["Mediclaim", "Government Schemes", "Cashless"]
+        }
+      }
+    ];
+
+    await HospitalModel.insertMany(hospitals);
+    console.log('Hospital data seeded successfully!');
+  } catch (error) {
+    console.error('Error seeding hospitals:', error);
+  }
+};
