@@ -153,5 +153,36 @@ export const getHospitalLocations = (): Promise<HospitalLocationsResponse['data'
 export const updateUser = (data: any): Promise<any> =>
   apiPut<any>('/user/updateUser', data);
 
+// Post API functions
+export const createPost = (formData: FormData): Promise<any> =>
+  api.post('/posts/create', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }).then(response => response.data);
+
+export const getFeedPosts = async (page: number = 1, limit: number = 10): Promise<any> => {
+  const response = await api.get(`/posts/feed?page=${page}&limit=${limit}`);
+  return response.data; // Return the full response including pagination
+};
+
+export const getPost = (postId: string): Promise<any> =>
+  apiGet<any>(`/posts/${postId}`);
+
+export const toggleLike = async (entityId: string, entityType: 'post' | 'comment'): Promise<any> => {
+  const response = await api.post('/posts/like', { entityId, entityType });
+  return response.data;
+};
+
+export const addComment = async (postId: string, content: string): Promise<any> => {
+  const response = await api.post('/posts/comment', { postId, content });
+  return response.data;
+};
+
+export const getPostComments = async (postId: string, page: number = 1, limit: number = 10): Promise<any> => {
+  const response = await api.get(`/posts/${postId}/comments?page=${page}&limit=${limit}`);
+  return response.data; // Return the full response including pagination
+};
+
 // Optionally export Axios instance
 export default api;

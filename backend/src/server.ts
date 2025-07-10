@@ -8,11 +8,11 @@ import institutionsRoutes from './routes/institutionsRoutes';
 import lookupRoutes from './routes/lookupRoutes';
 import userRoutes from './routes/userRoutes';
 import connectionRoutes from './routes/connectionRoutes';
+import postRoutes from './routes/postRoutes';
 import { connectDB } from './services/db';
 import collegeRoutes from './routes/collegeRoutes';
 import hospitalRoutes from './routes/hospitalRoutes';
-import { seedColleges } from './utils/seedColleges';
-import { seedHospitals } from './utils/seedHospitals';
+
 
 const app = express();
 const PORT = process.env.PORT ;
@@ -27,10 +27,7 @@ app.use(cors({
 
 connectDB()
   .then(async () => {
-    console.log(" MongoDB connected");
-
-    // Seed data
-    await seedHospitals();
+    console.log(" MongoDB connected")
 
     // Mount routes
     app.use('/api/auth', authRoutes);
@@ -40,6 +37,7 @@ connectDB()
     app.use("/api/colleges", collegeRoutes);
     app.use("/api/hospitals", hospitalRoutes);
     app.use("/api/connections", connectionRoutes);
+    app.use("/api/posts", postRoutes);
 
     app.listen(PORT, () => {
       console.log(` Express server running on http://localhost:${PORT}`);
