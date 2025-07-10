@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageSquare, Share2, Plus, X, Send, Loader2 } from "lucide-react";
+import { Heart, MessageSquare, Share2, Plus, X, Send, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +23,9 @@ export default function FeedPage() {
   const [page, setPage] = useState(1);
   const [isModalOpen, setModalOpen] = useState(false);
   const [videos, setVideos] = useState<File[]>([]);
+  
+  // Notification state
+  const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const [description, setDescription] = useState("");
   const [activeTab, setActiveTab] = useState("article");
@@ -32,11 +35,20 @@ export default function FeedPage() {
   const [commentsLoading, setCommentsLoading] = useState<{ [key: string]: boolean }>({});
   const [newComment, setNewComment] = useState<{ [key: string]: string }>({});
   const [isEndOfFeed, setIsEndOfFeed] = useState(false);
+  const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
+  const [currentMediaPost, setCurrentMediaPost] = useState<IPost | null>(null);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   
   const modalRef = useRef<HTMLDivElement | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastPostElementRef = useRef<HTMLDivElement | null>(null);
   const fetchingCommentsRef = useRef<Set<string>>(new Set());
+
+  // Show notification with auto-hide
+  const showNotification = (message: string, type: 'error' | 'success' | 'info' = 'error') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000); // Auto-hide after 4 seconds
+  };
 
   const fetchPosts = useCallback(async (pageNum: number, reset: boolean = false) => {
     try {
@@ -104,7 +116,7 @@ export default function FeedPage() {
     const newFiles = Array.from(files);
     const validFiles = newFiles.filter(file => {
       if (file.size > MAX_FILE_SIZE) {
-        alert(`File ${file.name} is too large. Maximum size is 50MB.`);
+        showNotification(`File ${file.name} is too large. Maximum size is 50MB.`);
         return false;
       }
       return true;
@@ -113,7 +125,7 @@ export default function FeedPage() {
     setter(prev => {
       const combined = [...prev, ...validFiles];
       if (combined.length > MAX_FILES) {
-        alert(`Maximum ${MAX_FILES} files allowed.`);
+        showNotification(`Maximum ${MAX_FILES} files allowed.`);
         return prev;
       }
       return combined;
@@ -126,12 +138,12 @@ export default function FeedPage() {
 
   const handleCreatePost = async () => {
     if (!isLoggedIn) {
-      alert("Please log in to create posts");
+      showNotification("Please log in to create posts");
       return;
     }
     
     if (!description.trim()) {
-      alert("Please enter a description");
+      showNotification("Please enter a description");
       return;
     }
 
@@ -153,13 +165,14 @@ export default function FeedPage() {
         setDescription("");
         setPhotos([]);
         setVideos([]);
+        showNotification("Post created successfully!", "success");
         // Refresh feed
         fetchPosts(1, true);
         setPage(1);
       }
     } catch (error) {
       console.error('Error creating post:', error);
-      alert("Error creating post. Please try again.");
+      showNotification("Error creating post. Please try again.");
     } finally {
       setCreating(false);
     }
@@ -167,7 +180,7 @@ export default function FeedPage() {
 
   const handleLike = async (postId: string) => {
     if (!isLoggedIn) {
-      alert("Please log in to like posts");
+      showNotification("Please log in to like posts");
       return;
     }
     
@@ -248,7 +261,7 @@ export default function FeedPage() {
 
   const handleAddComment = async (postId: string) => {
     if (!isLoggedIn) {
-      alert("Please log in to add comments");
+      showNotification("Please log in to add comments");
       return;
     }
     
@@ -263,6 +276,7 @@ export default function FeedPage() {
           [postId]: [response.data, ...(prev[postId] || [])]
         }));
         setNewComment(prev => ({ ...prev, [postId]: "" }));
+        showNotification("Comment added successfully!", "success");
         
         // Update comment count
         setPosts(prevPosts => 
@@ -291,6 +305,30 @@ export default function FeedPage() {
     return `${diffDays}d ago`;
   };
 
+  const openMediaViewer = (post: IPost, index: number = 0) => {
+    setCurrentMediaPost(post);
+    setCurrentMediaIndex(index);
+    setMediaViewerOpen(true);
+  };
+
+  const closeMediaViewer = () => {
+    setMediaViewerOpen(false);
+    setCurrentMediaPost(null);
+    setCurrentMediaIndex(0);
+  };
+
+  const nextMedia = () => {
+    if (currentMediaPost && currentMediaIndex < currentMediaPost.media.length - 1) {
+      setCurrentMediaIndex(currentMediaIndex + 1);
+    }
+  };
+
+  const prevMedia = () => {
+    if (currentMediaIndex > 0) {
+      setCurrentMediaIndex(currentMediaIndex - 1);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
@@ -307,17 +345,107 @@ export default function FeedPage() {
     };
   }, [isModalOpen]);
 
+  // Keyboard navigation for media viewer
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!mediaViewerOpen) return;
+      
+      switch (event.key) {
+        case 'ArrowLeft':
+          prevMedia();
+          break;
+        case 'ArrowRight':
+          nextMedia();
+          break;
+        case 'Escape':
+          closeMediaViewer();
+          break;
+      }
+    };
+
+    if (mediaViewerOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mediaViewerOpen, currentMediaIndex]);
+
   return (
     <div className="min-h-screen bg-gray-50 relative">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Notification Dropdown */}
+      {notification && (
+        <div className="fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-sm sm:w-full animate-in slide-in-from-right-full duration-300">
+          <div className={`p-4 rounded-lg shadow-lg border flex items-start space-x-3 ${
+            notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+            notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+            'bg-blue-50 border-blue-200 text-blue-800'
+          }`}>
+            <div className="flex-shrink-0 mt-0.5">
+              {notification.type === 'error' && (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              )}
+              {notification.type === 'success' && (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              )}
+              {notification.type === 'info' && (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium leading-5">{notification.message}</p>
+            </div>
+            <div className="flex-shrink-0">
+              <button 
+                onClick={() => setNotification(null)}
+                className="inline-flex rounded-md p-1.5 hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-gray-500 transition-colors duration-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="max-w-4xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-blue-900 mb-2">Community Feed</h1>
-          <p className="text-gray-600">Stay updated with the latest from the medical community</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-blue-900 mb-2">Community Feed</h1>
+          <p className="text-sm sm:text-base text-gray-600">Stay updated with the latest from the medical community</p>
         </div>
 
+        {/* Create Post Button (only for logged-in users) */}
+        {isLoggedIn && (
+          <div className="mb-4 sm:mb-6">
+            <Card className="p-3 sm:p-4">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
+                  <AvatarImage src={user?.profilePic?.url || "/placeholder-user.jpg"} />
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xs sm:text-sm">
+                    {user?.name?.substring(0, 2).toUpperCase() || "??"}
+                  </AvatarFallback>
+                </Avatar>
+                <Button
+                  onClick={() => setModalOpen(true)}
+                  variant="outline"
+                  className="flex-1 justify-start text-gray-500 hover:text-gray-700 text-sm sm:text-base h-8 sm:h-10"
+                >
+                  What's on your mind, {user?.name?.split(' ')[0] || 'there'}?
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
         {/* Feed Posts */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
 
           
           {posts.map((post, index) => (
@@ -326,80 +454,147 @@ export default function FeedPage() {
               className="hover:shadow-lg transition-shadow"
               ref={index === posts.length - 1 ? lastPostRef : null}
             >
-              <CardHeader>
-                <div className="flex items-center space-x-3">
-                  <Avatar>
+              <CardHeader className="pb-3 sm:pb-6">
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
                     <AvatarImage src={post.user?.profilePic?.url || "/placeholder-user.jpg"} />
-                    <AvatarFallback className="bg-blue-100 text-blue-600">
+                    <AvatarFallback className="bg-blue-100 text-blue-600 text-xs sm:text-sm">
                       {post.user?.name?.substring(0, 2).toUpperCase() || "??"}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <h4 className="font-semibold text-blue-900">{post.user?.name || "Unknown User"}</h4>
-                    <p className="text-sm text-gray-600">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-blue-900 text-sm sm:text-base truncate">{post.user?.name || "Unknown User"}</h4>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">
                       {post.user?.specialty || "Unknown"} at {post.user?.institution || "Unknown"} • {formatTimeAgo(post.createdAt)}
                     </p>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 mb-4">{post.description}</p>
+              <CardContent className="pt-0">
+                <p className="text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base">{post.description}</p>
                 
-                {/* Media Display */}
+                {/* Media Display - LinkedIn Style */}
                 {post.media && post.media.length > 0 && (
-                  <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {post.media.map((media, mediaIndex) => (
-                      <div key={mediaIndex} className="rounded-lg overflow-hidden">
-                        {media.type === 'image' ? (
+                  <div className="mb-3 sm:mb-4">
+                    {post.media.length === 1 ? (
+                      // Single media - full width
+                      <div className="rounded-lg overflow-hidden cursor-pointer" onClick={() => openMediaViewer(post, 0)}>
+                        {post.media[0].type === 'image' ? (
                           <img 
-                            src={media.url} 
+                            src={post.media[0].url} 
                             alt="" 
-                            className="w-full h-auto max-h-96 object-cover"
+                            className="w-full h-48 sm:h-64 md:h-96 object-cover"
                           />
                         ) : (
                           <video 
-                            src={media.url} 
-                            controls 
-                            className="w-full h-auto max-h-96"
+                            src={post.media[0].url} 
+                            className="w-full h-48 sm:h-64 md:h-96 object-cover"
                           />
                         )}
                       </div>
-                    ))}
+                    ) : (
+                      // Multiple media - LinkedIn style layout
+                      <div className="flex gap-1 sm:gap-2 h-48 sm:h-64 md:h-96">
+                        {/* Left side - Main image (50% width) */}
+                        <div className="flex-1 rounded-lg overflow-hidden cursor-pointer" onClick={() => openMediaViewer(post, 0)}>
+                          {post.media[0].type === 'image' ? (
+                            <img 
+                              src={post.media[0].url} 
+                              alt="" 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <video 
+                              src={post.media[0].url} 
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </div>
+                        
+                        {/* Right side - 2x1 grid (50% width) */}
+                        <div className="flex-1 flex flex-col gap-1 sm:gap-2">
+                          {/* Second media (top half) */}
+                          {post.media[1] && (
+                            <div className="flex-1 rounded-lg overflow-hidden cursor-pointer" onClick={() => openMediaViewer(post, 1)}>
+                              {post.media[1].type === 'image' ? (
+                                <img 
+                                  src={post.media[1].url} 
+                                  alt="" 
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <video 
+                                  src={post.media[1].url} 
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Third media or "+X more" overlay (bottom half) */}
+                          {post.media.length > 2 && (
+                            <div className="flex-1 relative rounded-lg overflow-hidden cursor-pointer" onClick={() => openMediaViewer(post, 2)}>
+                              {post.media[2].type === 'image' ? (
+                                <img 
+                                  src={post.media[2].url} 
+                                  alt="" 
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <video 
+                                  src={post.media[2].url} 
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                              
+                              {/* "+X more" overlay */}
+                              {post.media.length > 3 && (
+                                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center rounded-lg">
+                                  <span className="text-white text-sm sm:text-lg md:text-xl font-bold">
+                                    +{post.media.length - 3} more
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 
-                <div className="flex items-center space-x-6 text-gray-500">
+                <div className="flex items-center space-x-4 sm:space-x-6 text-gray-500">
                   <button 
                     onClick={() => handleLike(post._id)}
-                    className={`flex items-center space-x-2 hover:text-blue-600 transition-colors ${
+                    className={`flex items-center space-x-1 sm:space-x-2 hover:text-blue-600 transition-colors ${
                       post.isLiked ? 'text-red-500' : ''
                     }`}
                   >
-                    <Heart className={`w-5 h-5 ${post.isLiked ? 'fill-current' : ''}`} />
-                    <span>{post.likesCount} likes</span>
+                    <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${post.isLiked ? 'fill-current' : ''}`} />
+                    <span className="text-xs sm:text-sm">{post.likesCount} likes</span>
                   </button>
                   <button 
                     onClick={() => toggleComments(post._id)}
-                    className="flex items-center space-x-2 hover:text-blue-600 transition-colors"
+                    className="flex items-center space-x-1 sm:space-x-2 hover:text-blue-600 transition-colors"
                   >
-                    <MessageSquare className="w-5 h-5" />
-                    <span>{post.commentsCount} comments</span>
+                    <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="text-xs sm:text-sm">{post.commentsCount} comments</span>
                   </button>
-                  <button className="flex items-center space-x-2 hover:text-blue-600 transition-colors">
-                    <Share2 className="w-5 h-5" />
-                    <span>Share</span>
+                  <button className="flex items-center space-x-1 sm:space-x-2 hover:text-blue-600 transition-colors">
+                    <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="text-xs sm:text-sm">Share</span>
                   </button>
                 </div>
                 
                 {/* Comments Section */}
                 {expandedComments[post._id] && (
-                  <div className="mt-4 pt-4 border-t">
+                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
                     {/* Add Comment */}
                     {isLoggedIn && (
-                      <div className="flex space-x-3 mb-4">
-                        <Avatar className="w-8 h-8">
+                      <div className="flex space-x-2 sm:space-x-3 mb-3 sm:mb-4">
+                        <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
                           <AvatarImage src={user?.profilePic?.url || "/placeholder-user.jpg"} />
-                          <AvatarFallback className="bg-blue-100 text-blue-600">
+                          <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
                             {user?.name?.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -409,13 +604,15 @@ export default function FeedPage() {
                             value={newComment[post._id] || ""}
                             onChange={(e) => setNewComment(prev => ({ ...prev, [post._id]: e.target.value }))}
                             onKeyPress={(e) => e.key === 'Enter' && handleAddComment(post._id)}
+                            className="text-sm"
                           />
                           <Button 
                             size="sm" 
                             onClick={() => handleAddComment(post._id)}
                             disabled={!newComment[post._id]?.trim()}
+                            className="px-2 sm:px-3"
                           >
-                            <Send className="w-4 h-4" />
+                            <Send className="w-3 h-3 sm:w-4 sm:h-4" />
                           </Button>
                         </div>
                       </div>
@@ -424,22 +621,22 @@ export default function FeedPage() {
                     {/* Comments List */}
                     {commentsLoading[post._id] ? (
                       <div className="flex justify-center py-4">
-                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-2 sm:space-y-3">
                         {comments[post._id]?.map((comment) => (
-                          <div key={comment._id} className="flex space-x-3">
-                            <Avatar className="w-8 h-8">
+                          <div key={comment._id} className="flex space-x-2 sm:space-x-3">
+                            <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0">
                               <AvatarImage src={comment.user?.profilePic?.url || "/placeholder-user.jpg"} />
-                              <AvatarFallback className="bg-blue-100 text-blue-600">
+                              <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
                                 {comment.user?.name?.substring(0, 2).toUpperCase() || "??"}
                               </AvatarFallback>
                             </Avatar>
-                            <div className="flex-1">
-                              <div className="bg-gray-100 rounded-lg px-3 py-2">
-                                <p className="font-semibold text-sm text-blue-900">{comment.user?.name || "Unknown User"}</p>
-                                <p className="text-gray-700">{comment.content}</p>
+                            <div className="flex-1 min-w-0">
+                              <div className="bg-gray-100 rounded-lg px-2 sm:px-3 py-1 sm:py-2">
+                                <p className="font-semibold text-xs sm:text-sm text-blue-900 truncate">{comment.user?.name || "Unknown User"}</p>
+                                <p className="text-gray-700 text-xs sm:text-sm break-words">{comment.content}</p>
                               </div>
                               <p className="text-xs text-gray-500 mt-1">{formatTimeAgo(comment.createdAt)}</p>
                             </div>
@@ -489,60 +686,60 @@ export default function FeedPage() {
         {isLoggedIn && (
           <Button
             onClick={() => setModalOpen(true)}
-            className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 p-0 shadow-lg"
+            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-12 h-12 sm:w-14 sm:h-14 p-0 shadow-lg"
           >
-            <Plus className="w-6 h-6" />
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
           </Button>
         )}
 
         {/* Create Post Modal */}
         <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
-          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto mx-auto">
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold text-blue-800">Create a New Post</DialogTitle>
+              <DialogTitle className="text-lg sm:text-xl font-semibold text-blue-800">Create a New Post</DialogTitle>
             </DialogHeader>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="article">Article</TabsTrigger>
-                <TabsTrigger value="photo">Photo</TabsTrigger>
-                <TabsTrigger value="video">Video</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6">
+                <TabsTrigger value="article" className="text-xs sm:text-sm">Article</TabsTrigger>
+                <TabsTrigger value="photo" className="text-xs sm:text-sm">Photo</TabsTrigger>
+                <TabsTrigger value="video" className="text-xs sm:text-sm">Video</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="article" className="space-y-4">
+              <TabsContent value="article" className="space-y-3 sm:space-y-4">
                 <Textarea
                   placeholder="Share your thoughts with the medical community..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  rows={8}
-                  className="border-gray-300"
+                  rows={6}
+                  className="border-gray-300 text-sm sm:text-base"
                 />
                 <div className="flex justify-end">
                   <Button 
                     onClick={handleCreatePost}
                     disabled={creating || !description.trim()}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
+                    className="bg-blue-600 text-white hover:bg-blue-700 text-sm sm:text-base"
                   >
-                    {creating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    {creating ? <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin mr-2" /> : null}
                     Post
                   </Button>
                 </div>
               </TabsContent>
 
-              <TabsContent value="photo" className="space-y-4">
-                <div className="flex flex-wrap gap-4">
+              <TabsContent value="photo" className="space-y-3 sm:space-y-4">
+                <div className="flex flex-wrap gap-2 sm:gap-4">
                   {photos.map((photo, index) => (
-                    <div key={index} className="relative w-24 h-24 bg-gray-100 rounded-lg overflow-hidden">
+                    <div key={index} className="relative w-16 h-16 sm:w-24 sm:h-24 bg-gray-100 rounded-lg overflow-hidden">
                       <img src={URL.createObjectURL(photo)} className="w-full h-full object-cover" alt="" />
                       <button
                         onClick={() => handleFileRemove(index, setPhotos)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
+                        className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 bg-red-500 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center"
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-2 h-2 sm:w-3 sm:h-3" />
                       </button>
                     </div>
                   ))}
-                  <label className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-400">
+                  <label className="w-16 h-16 sm:w-24 sm:h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-400">
                     <input
                       type="file"
                       accept="image/*"
@@ -550,40 +747,42 @@ export default function FeedPage() {
                       className="hidden"
                       onChange={(e) => handleFileAdd(e.target.files, setPhotos)}
                     />
-                    <Plus className="text-gray-500" />
+                    <Plus className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
                   </label>
                 </div>
                 <Textarea 
                   placeholder="Write something about your photos..." 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  rows={4}
+                  className="text-sm sm:text-base"
                 />
                 <div className="flex justify-end">
                   <Button 
                     onClick={handleCreatePost}
                     disabled={creating || !description.trim()}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
+                    className="bg-blue-600 text-white hover:bg-blue-700 text-sm sm:text-base"
                   >
-                    {creating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    {creating ? <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin mr-2" /> : null}
                     Post
                   </Button>
                 </div>
               </TabsContent>
 
-              <TabsContent value="video" className="space-y-4">
-                <div className="flex flex-wrap gap-4">
+              <TabsContent value="video" className="space-y-3 sm:space-y-4">
+                <div className="flex flex-wrap gap-2 sm:gap-4">
                   {videos.map((video, index) => (
-                    <div key={index} className="relative w-24 h-24 bg-gray-100 rounded-lg overflow-hidden">
+                    <div key={index} className="relative w-16 h-16 sm:w-24 sm:h-24 bg-gray-100 rounded-lg overflow-hidden">
                       <video className="w-full h-full object-cover" src={URL.createObjectURL(video)} />
                       <button
                         onClick={() => handleFileRemove(index, setVideos)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
+                        className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 bg-red-500 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center"
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-2 h-2 sm:w-3 sm:h-3" />
                       </button>
                     </div>
                   ))}
-                  <label className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-400">
+                  <label className="w-16 h-16 sm:w-24 sm:h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-400">
                     <input
                       type="file"
                       accept="video/*"
@@ -591,26 +790,91 @@ export default function FeedPage() {
                       className="hidden"
                       onChange={(e) => handleFileAdd(e.target.files, setVideos)}
                     />
-                    <Plus className="text-gray-500" />
+                    <Plus className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
                   </label>
                 </div>
                 <Textarea 
                   placeholder="Write something about your videos..." 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  rows={4}
+                  className="text-sm sm:text-base"
                 />
                 <div className="flex justify-end">
                   <Button 
                     onClick={handleCreatePost}
                     disabled={creating || !description.trim()}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
+                    className="bg-blue-600 text-white hover:bg-blue-700 text-sm sm:text-base"
                   >
-                    {creating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    {creating ? <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin mr-2" /> : null}
                     Post
                   </Button>
                 </div>
               </TabsContent>
             </Tabs>
+          </DialogContent>
+        </Dialog>
+
+        {/* Media Viewer Modal */}
+        <Dialog open={mediaViewerOpen} onOpenChange={setMediaViewerOpen}>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full bg-black/95 border-0 p-0 m-0">
+            {currentMediaPost && (
+              <div className="relative w-full h-full min-h-[80vh] flex items-center justify-center">
+                {/* Close Button */}
+                <button
+                  onClick={closeMediaViewer}
+                  className="absolute top-4 right-4 z-50 text-white hover:text-gray-300 bg-black/70 rounded-full p-2 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+
+                {/* Media Counter */}
+                <div className="absolute top-4 left-4 z-50 text-white bg-black/70 rounded-full px-4 py-2 text-sm font-medium">
+                  {currentMediaIndex + 1} / {currentMediaPost.media.length}
+                </div>
+
+                {/* Previous Button */}
+                {currentMediaIndex > 0 && (
+                  <button
+                    onClick={prevMedia}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 z-50 text-white hover:text-gray-300 bg-black/70 rounded-full p-3 transition-colors"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                )}
+
+                {/* Next Button */}
+                {currentMediaIndex < currentMediaPost.media.length - 1 && (
+                  <button
+                    onClick={nextMedia}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 z-50 text-white hover:text-gray-300 bg-black/70 rounded-full p-3 transition-colors"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                )}
+
+                {/* Media Content Container */}
+                <div className="w-full h-full flex items-center justify-center p-16">
+                  <div className="max-w-full max-h-full flex items-center justify-center">
+                    {currentMediaPost.media[currentMediaIndex].type === 'image' ? (
+                      <img
+                        src={currentMediaPost.media[currentMediaIndex].url}
+                        alt=""
+                        className="max-w-full max-h-full object-contain rounded-lg"
+                        style={{ maxHeight: 'calc(100vh - 8rem)' }}
+                      />
+                    ) : (
+                      <video
+                        src={currentMediaPost.media[currentMediaIndex].url}
+                        controls
+                        className="max-w-full max-h-full object-contain rounded-lg"
+                        style={{ maxHeight: 'calc(100vh - 8rem)' }}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
