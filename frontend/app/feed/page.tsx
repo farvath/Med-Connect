@@ -74,7 +74,13 @@ export default function FeedPage() {
           return updatedPosts;
         });
         
-        setHasMore(response.pagination?.hasMore || false);
+        const hasMorePosts = response.pagination?.hasMore || false;
+        setHasMore(hasMorePosts);
+        
+        // Set end of feed if no more posts available
+        if (!hasMorePosts && newPosts.length < 10) {
+          setIsEndOfFeed(true);
+        }
       }
     } catch (error) {
       console.error('❌ Error fetching posts:', error);
@@ -660,17 +666,31 @@ export default function FeedPage() {
           {/* End of feed message */}
           {isEndOfFeed && (
             <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">You've reached the end of the feed!</p>
-              <Button 
-                onClick={() => {
-                  setIsEndOfFeed(false);
-                  setPage(1);
-                  fetchPosts(1, true);
-                }}
-                variant="outline"
-              >
-                Refresh for latest posts
-              </Button>
+              <div className="border-t border-gray-200 pt-6">
+                <p className="text-gray-600 mb-2 text-sm sm:text-base font-medium">Posts are over!</p>
+                <p className="text-gray-500 text-xs sm:text-sm">Please refresh for latest posts.</p>
+              </div>
+            </div>
+          )}
+          
+          {/* No posts available */}
+          {!loading && posts.length === 0 && !isEndOfFeed && (
+            <div className="text-center py-12">
+              <div className="max-w-md mx-auto">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                  <MessageSquare className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No posts yet</h3>
+                <p className="text-gray-500 mb-4">Be the first to share something with the community!</p>
+                {isLoggedIn && (
+                  <Button 
+                    onClick={() => setModalOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Create First Post
+                  </Button>
+                )}
+              </div>
             </div>
           )}
           
