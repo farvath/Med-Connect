@@ -838,6 +838,9 @@ export default function FeedPage() {
         {/* Media Viewer Modal */}
         <Dialog open={mediaViewerOpen} onOpenChange={setMediaViewerOpen}>
           <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full bg-black/95 border-0 p-0 m-0">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Media Viewer</DialogTitle>
+            </DialogHeader>
             {currentMediaPost && (
               <div className="relative w-full h-full min-h-[80vh] flex items-center justify-center">
                 {/* Close Button */}
