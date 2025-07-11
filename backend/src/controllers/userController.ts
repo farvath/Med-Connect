@@ -145,3 +145,49 @@ export const updateUser = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
+// Controller to get user details by ID (for viewing other users' profiles)
+export const getUserById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    // Validate ObjectId format
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID format",
+      });
+    }
+
+    // Fetch user by ID, excluding sensitive fields
+    const user = await User.findById(id).select("-password -__v");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User profile fetched successfully",
+      data: user,
+    });
+  } catch (err: any) {
+    console.error("getUserById error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
