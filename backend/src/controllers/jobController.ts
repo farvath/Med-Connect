@@ -74,7 +74,7 @@ export const getJobById = async (req: Request, res: Response) => {
     await connectDB();
     
     const { id } = req.params;
-    console.log('getJobById called with ID:', id);
+    
     
     // If ID is "user", this means the route is not working correctly
     if (id === 'user') {
@@ -291,25 +291,24 @@ export const getJobApplications = async (req: AuthenticatedRequest, res: Respons
 // Get user's job applications
 export const getUserApplications = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    console.log('getUserApplications called for userId:', req.userId);
+  
     await connectDB();
     
     const userId = req.userId;
     
     if (!userId) {
-      console.log('No userId found in request');
       return res.status(401).json({
         success: false,
         message: 'Unauthorized'
       });
     }
     
-    console.log('Fetching applications for user:', userId);
+    
     const applications = await JobApplication.find({ applicantId: userId })
       .populate('jobId', 'title institution location type salary')
       .sort({ appliedDate: -1 });
     
-    console.log('Found applications:', applications.length);
+   
     res.json({
       success: true,
       data: applications
