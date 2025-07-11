@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { IUserProfile, IEducation, IExperience } from '@/types/user'; 
 import { apiFetch, apiPost, apiPut } from '@/lib/api'; 
 import { useAuth } from '@/contexts/AuthContext';
+import UserContentManager from './UserContentManager';
 
 
 
@@ -211,11 +212,11 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-8 font-inter">
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-6 sm:p-8">
+    <div className="min-h-screen bg-gray-100 p-2 sm:p-4 md:p-6 lg:p-8 font-inter">
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-4 sm:p-6 md:p-8">
         {/* Profile Header Section (Always Visible) */}
-        <div className="flex flex-col items-center border-b pb-6 mb-6">
-          <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-blue-500 shadow-md">
+        <div className="flex flex-col items-center border-b pb-4 md:pb-6 mb-4 md:mb-6">
+          <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-blue-500 shadow-md">
             {/* Replaced Next.js Image component with standard <img> tag to avoid Next.js specific imports */}
             <img
               src={userData.profilePic?.url || 'https://placehold.co/128x128/aabbcc/ffffff?text=No+Pic'} // Placeholder if no profile pic
@@ -223,17 +224,17 @@ const ProfilePage: React.FC = () => {
               className="w-full h-full object-cover rounded-full"
             />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mt-4 text-center">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mt-3 md:mt-4 text-center px-4">
             {userData.name}
           </h1>
           {userData.headline && (
-            <p className="text-gray-600 text-lg mt-1 text-center">{userData.headline}</p>
+            <p className="text-gray-600 text-base md:text-lg mt-1 text-center px-4">{userData.headline}</p>
           )}
-          <p className="text-gray-500 text-md mt-1 text-center">
+          <p className="text-gray-500 text-sm md:text-md mt-1 text-center px-4 leading-relaxed">
             {userData.specialty} {userData.institution ? `at ${userData.institution}` : ''} &bull; {userData.location}
           </p>
           {userData.bio && (
-            <p className="text-gray-700 text-center mt-4 max-w-2xl px-2">{userData.bio}</p>
+            <p className="text-gray-700 text-center mt-3 md:mt-4 max-w-2xl px-4 text-sm md:text-base leading-relaxed">{userData.bio}</p>
           )}
           <button
             onClick={() => {
@@ -254,7 +255,7 @@ const ProfilePage: React.FC = () => {
                 setFormValues({ ...userData, education: formattedEducation, experience: formattedExperience });
               }
             }}
-            className="mt-6 px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300"
+            className="mt-4 md:mt-6 px-4 md:px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 text-sm md:text-base"
           >
             {editMode ? 'Cancel Edit' : 'Edit Profile'}
           </button>
@@ -262,43 +263,48 @@ const ProfilePage: React.FC = () => {
 
         {/* Profile Content - Display Mode */}
         {!editMode && (
-          <div className="space-y-8">
+          <div className="space-y-6 md:space-y-8">
             {/* Education Section - Always show heading */}
             <section>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Education</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 border-b pb-2">Education</h2>
               {userData.education.length > 0 ? (
                 userData.education.map((edu, index) => (
-                  <div key={edu._id || index} className="mb-4 p-4 bg-gray-50 rounded-lg shadow-sm">
-                    <h3 className="text-xl font-semibold text-gray-900">{edu.degree} in {edu.fieldOfStudy}</h3>
-                    <p className="text-gray-700">{edu.institution}</p>
-                    <p className="text-gray-500 text-sm">
+                  <div key={edu._id || index} className="mb-3 md:mb-4 p-3 md:p-4 bg-gray-50 rounded-lg shadow-sm">
+                    <h3 className="text-lg md:text-xl font-semibold text-gray-900">{edu.degree} in {edu.fieldOfStudy}</h3>
+                    <p className="text-gray-700 text-sm md:text-base">{edu.institution}</p>
+                    <p className="text-gray-500 text-xs md:text-sm">
                       {new Date(edu.startDate).getFullYear()} - {edu.endDate ? new Date(edu.endDate).getFullYear() : 'Present'}
                     </p>
-                    {edu.description && <p className="text-gray-600 mt-2">{edu.description}</p>}
+                    {edu.description && <p className="text-gray-600 mt-2 text-sm md:text-base">{edu.description}</p>}
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 italic">No education details added yet.</p>
+                <p className="text-gray-500 italic text-sm md:text-base">No education details added yet.</p>
               )}
             </section>
 
             {/* Experience Section - Always show heading */}
             <section>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Experience</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4 border-b pb-2">Experience</h2>
               {userData.experience.length > 0 ? (
                 userData.experience.map((exp, index) => (
-                  <div key={exp._id || index} className="mb-4 p-4 bg-gray-50 rounded-lg shadow-sm">
-                    <h3 className="text-xl font-semibold text-gray-900">{exp.title}</h3>
-                    <p className="text-gray-700">{exp.company} &bull; {exp.location}</p>
-                    <p className="text-gray-500 text-sm">
+                  <div key={exp._id || index} className="mb-3 md:mb-4 p-3 md:p-4 bg-gray-50 rounded-lg shadow-sm">
+                    <h3 className="text-lg md:text-xl font-semibold text-gray-900">{exp.title}</h3>
+                    <p className="text-gray-700 text-sm md:text-base">{exp.company} &bull; {exp.location}</p>
+                    <p className="text-gray-500 text-xs md:text-sm">
                       {new Date(exp.startDate).getFullYear()} - {exp.current ? 'Present' : (exp.endDate ? new Date(exp.endDate).getFullYear() : '')}
                     </p>
-                    {exp.description && <p className="text-gray-600 mt-2">{exp.description}</p>}
+                    {exp.description && <p className="text-gray-600 mt-2 text-sm md:text-base">{exp.description}</p>}
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 italic">No experience details added yet.</p>
+                <p className="text-gray-500 italic text-sm md:text-base">No experience details added yet.</p>
               )}
+            </section>
+
+            {/* User Content Manager Section */}
+            <section>
+              <UserContentManager userId={userData._id} />
             </section>
           </div>
         )}
