@@ -305,7 +305,14 @@ export const getUserApplications = async (req: AuthenticatedRequest, res: Respon
     
     
     const applications = await JobApplication.find({ applicantId: userId })
-      .populate('jobId', 'title institution location type salary')
+      .populate({
+        path: 'jobId',
+        select: 'title institution location type salary experience description responsibilities requirements benefits aboutInstitution postedBy postedDate isActive',
+        populate: {
+          path: 'postedBy',
+          select: 'name email'
+        }
+      })
       .sort({ appliedDate: -1 });
     
    
@@ -337,11 +344,20 @@ export const getUserJobs = async (req: AuthenticatedRequest, res: Response) => {
     }
     
     const jobs = await Job.find({ postedBy: userId })
+      .populate('postedBy', 'name email')
       .sort({ postedDate: -1 });
     
     res.json({
       success: true,
-      data: jobs
+      data: {
+        jobs,
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalJobs: jobs.length,
+          hasNextPage: false
+        }
+      }
     });
   } catch (error: any) {
     res.status(500).json({
