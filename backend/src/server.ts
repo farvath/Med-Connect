@@ -9,6 +9,7 @@ import lookupRoutes from './routes/lookupRoutes';
 import userRoutes from './routes/userRoutes';
 import connectionRoutes from './routes/connectionRoutes';
 import postRoutes from './routes/postRoutes';
+import jobRoutes from './routes/jobRoutes';
 import { connectDB } from './services/db';
 import collegeRoutes from './routes/collegeRoutes';
 import hospitalRoutes from './routes/hospitalRoutes';
@@ -38,6 +39,7 @@ connectDB()
     app.use("/api/hospitals", hospitalRoutes);
     app.use("/api/connections", connectionRoutes);
     app.use("/api/posts", postRoutes);
+    app.use("/api/jobs", jobRoutes);
 
     app.listen(PORT, () => {
       console.log(` Express server running on http://localhost:${PORT}`);

@@ -184,5 +184,38 @@ export const getPostComments = async (postId: string, page: number = 1, limit: n
   return response.data; // Return the full response including pagination
 };
 
+// User Posts and Comments API functions
+export const getUserPosts = async (page: number = 1, limit: number = 10): Promise<any> => {
+  const response = await api.get(`/posts/user/posts?page=${page}&limit=${limit}`);
+  return response.data;
+};
+
+export const getUserComments = async (page: number = 1, limit: number = 10): Promise<any> => {
+  const response = await api.get(`/posts/user/comments?page=${page}&limit=${limit}`);
+  return response.data;
+};
+
+export const updatePost = (postId: string, formData: FormData): Promise<any> =>
+  api.put(`/posts/${postId}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }).then(response => response.data);
+
+export const deletePost = async (postId: string): Promise<any> => {
+  const response = await api.delete(`/posts/${postId}`);
+  return response.data;
+};
+
+export const updateComment = async (commentId: string, content: string): Promise<any> => {
+  const response = await api.put(`/posts/comment/${commentId}`, { content });
+  return response.data;
+};
+
+export const deleteComment = async (commentId: string): Promise<any> => {
+  const response = await api.delete(`/posts/comment/${commentId}`);
+  return response.data;
+};
+
 // Optionally export Axios instance
 export default api;

@@ -3,6 +3,7 @@ import './globals.css'
 import Header from '../components/Header';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: 'MedConnect - Professional Networking for Medical Professionals',
@@ -23,6 +24,7 @@ export default function RootLayout({
           <TooltipProvider>
             <Header />
             <div style={{ paddingTop: '64px' }}>{children}</div>
+            <Toaster />
           </TooltipProvider>
         </AuthProvider>
       </body>

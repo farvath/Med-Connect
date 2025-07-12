@@ -137,14 +137,14 @@ function ProfileBar({ user, onLogout }: ProfileBarProps) {
           <User className="mr-3 h-5 w-5 text-blue-600" />
           <span className="font-medium">My Profile</span>
         </DropdownMenuItem>
-        <DropdownMenuItem className="rounded-xl p-2.5 hover:bg-blue-50 transition-colors duration-200 cursor-pointer">
+        {/* <DropdownMenuItem className="rounded-xl p-2.5 hover:bg-blue-50 transition-colors duration-200 cursor-pointer">
           <Plus className="mr-3 h-5 w-5 text-blue-600" />
           <span className="font-medium">Post a Job</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="rounded-xl p-2.5 hover:bg-blue-50 transition-colors duration-200 cursor-pointer">
+        </DropdownMenuItem> */}
+        {/* <DropdownMenuItem className="rounded-xl p-2.5 hover:bg-blue-50 transition-colors duration-200 cursor-pointer">
           <Settings className="mr-3 h-5 w-5 text-gray-600" />
           <span className="font-medium">Settings</span>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         <DropdownMenuSeparator className="my-2" />
         <DropdownMenuItem
           className="rounded-xl p-2.5 hover:bg-red-50 transition-colors duration-200 cursor-pointer text-red-600"
@@ -199,9 +199,11 @@ export default function Header() {
             <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
               <Stethoscope className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900 hidden sm:block group-hover:text-blue-600 transition-colors duration-300">
-              MedConnect
-            </span>
+            {!isLoggedIn && (
+              <span className="text-xl font-bold text-gray-900 hidden sm:block group-hover:text-blue-600 transition-colors duration-300">
+                MedConnect
+              </span>
+            )}
           </Link>
 
           {/* Search Bar */}
