@@ -31,17 +31,23 @@ const defaultOrigins = [
 
 // Add production origins
 if (process.env.NODE_ENV === 'production') {
-  defaultOrigins.push('https://medconnect-mvp.netlify.app');
+  defaultOrigins.push(
+    'https://medconnect-mvp.netlify.app',
+    'https://med-connect-opal-one.vercel.app'
+  );
 }
 
 const corsOrigins = allowedOrigins.length > 0 ? allowedOrigins : defaultOrigins;
 
+console.log('CORS Origins:', corsOrigins);
+console.log('NODE_ENV:', process.env.NODE_ENV);
 
 app.use(cors({
   origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  optionsSuccessStatus: 200
 }));
 
 
@@ -64,6 +70,21 @@ async function setupApp() {
 
     app.use("/", (req, res) => {
       res.status(200).json({ message: "Backend is connected successfully, you're hitting / route correctly." });
+    });
+
+    // Debug endpoint for production troubleshooting
+    app.get("/api/debug", (req, res) => {
+      res.status(200).json({
+        message: "Debug info",
+        nodeEnv: process.env.NODE_ENV,
+        jwtSecretPresent: !!process.env.JWT_SECRET,
+        allowedOrigins: corsOrigins,
+        cookies: Object.keys(req.cookies || {}),
+        headers: {
+          origin: req.headers.origin,
+          'user-agent': req.headers['user-agent']?.substring(0, 50) + '...',
+        }
+      });
     });
 
     return app;

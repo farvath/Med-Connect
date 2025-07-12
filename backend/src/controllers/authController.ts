@@ -97,14 +97,14 @@ export const signup = async (req: AuthRequest, res: Response) => {
     // Set HTTP-only cookies for tokens
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'none',
       secure: process.env.NODE_ENV === 'production',
       maxAge: 3 * 60 * 60 * 1000, // 3 hours
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'none',
       secure: process.env.NODE_ENV === 'production',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
@@ -171,8 +171,18 @@ export const login = async (req: Request, res: Response) => {
     const accessToken = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "3h" });
     const refreshToken = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "7d" });
 
-    res.cookie("accessToken", accessToken, { httpOnly: true, maxAge: 3 * 60 * 60 * 1000 });
-    res.cookie("refreshToken", refreshToken, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 3 * 60 * 60 * 1000, // 3 hours
+    });
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     return res.status(200).json({
       success: true,
@@ -193,8 +203,16 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const logout = (req: Request, res: Response) => {
-  res.clearCookie("accessToken", { httpOnly: true, sameSite: "strict" });
-  res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" });
+  res.clearCookie("accessToken", { 
+    httpOnly: true, 
+    sameSite: "none",
+    secure: process.env.NODE_ENV === 'production'
+  });
+  res.clearCookie("refreshToken", { 
+    httpOnly: true, 
+    sameSite: "none",
+    secure: process.env.NODE_ENV === 'production'
+  });
 
   return res.status(200).json({
     success: true,
