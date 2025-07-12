@@ -40,8 +40,10 @@ connectDB()
     app.use("/api/connections", connectionRoutes);
     app.use("/api/posts", postRoutes);
     app.use("/api/jobs", jobRoutes);
-     app.use("/api/jobs", (req,res)=>{
-      res.status(200).json({ message: "Backend is connected successfully, you're hitting / route correctly." });
+
+
+     app.use("/", (req,res)=>{
+      res.send(200).json({ message: "Backend is connected successfully, you're hitting / route correctly." });
      });
 
     app.listen(PORT, () => {
