@@ -26,9 +26,11 @@ app.use(cors({
 }));
 
 
-connectDB()
-  .then(async () => {
-    console.log(" MongoDB connected")
+// Setup routes and middleware
+async function setupApp() {
+  try {
+    await connectDB();
+    console.log("MongoDB connected");
 
     // Mount routes
     app.use('/api/auth', authRoutes);
@@ -41,16 +43,31 @@ connectDB()
     app.use("/api/posts", postRoutes);
     app.use("/api/jobs", jobRoutes);
 
-
-     app.use("/", (req,res)=>{
-      res.send(200).json({ message: "Backend is connected successfully, you're hitting / route correctly." });
-     });
-
-    app.listen(PORT, () => {
-      console.log(` Express server running on http://localhost:${PORT}`);
+    app.use("/", (req, res) => {
+      res.status(200).json({ message: "Backend is connected successfully, you're hitting / route correctly." });
     });
-  })
-  .catch((err) => {
+
+    return app;
+  } catch (err) {
     console.error("Failed to connect to MongoDB", err);
-    process.exit(1); // exit if DB can't be connected
+    throw err;
+  }
+}
+
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  setupApp().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Express server running on http://localhost:${PORT}`);
+    });
+  }).catch((err) => {
+    console.error("Failed to start server", err);
+    process.exit(1);
   });
+}
+
+// Export for Vercel
+export default async function handler(req: any, res: any) {
+  await setupApp();
+  return app(req, res);
+}
