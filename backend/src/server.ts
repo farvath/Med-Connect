@@ -36,8 +36,6 @@ if (process.env.NODE_ENV === 'production') {
 
 const corsOrigins = allowedOrigins.length > 0 ? allowedOrigins : defaultOrigins;
 
-console.log('CORS Origins:', corsOrigins);
-console.log('Environment:', process.env.NODE_ENV);
 
 app.use(cors({
   origin: corsOrigins,
