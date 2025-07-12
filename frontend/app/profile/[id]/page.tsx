@@ -148,27 +148,29 @@ export default function ViewProfilePage() {
         </Card>
 
         {/* Bio Section */}
-        {profile.bio && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>About</CardTitle>
-            </CardHeader>
-            <CardContent>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>About</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {profile.bio ? (
               <p className="text-gray-700 leading-relaxed">{profile.bio}</p>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-gray-500 italic">No bio available</p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Experience Section */}
-        {profile.experience && profile.experience.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Briefcase className="h-5 w-5 mr-2" />
-                Experience
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Briefcase className="h-5 w-5 mr-2" />
+              Experience
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {profile.experience && profile.experience.length > 0 ? (
               <div className="space-y-6">
                 {profile.experience.map((exp, index) => (
                   <div key={exp._id || index}>
@@ -206,20 +208,22 @@ export default function ViewProfilePage() {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-gray-500 italic">No work experience added</p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Education Section */}
-        {profile.education && profile.education.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <GraduationCap className="h-5 w-5 mr-2" />
-                Education
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <GraduationCap className="h-5 w-5 mr-2" />
+              Education
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {profile.education && profile.education.length > 0 ? (
               <div className="space-y-6">
                 {profile.education.map((edu, index) => (
                   <div key={edu._id || index}>
@@ -252,9 +256,11 @@ export default function ViewProfilePage() {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-gray-500 italic">No education information added</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

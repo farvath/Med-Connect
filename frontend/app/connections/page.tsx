@@ -385,62 +385,58 @@ export default function ConnectionsPage() {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {myConnections.map((connection) => (
-                      <Card key={connection._id} className="hover:shadow-lg transition-shadow">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center space-x-3 sm:space-x-4">
-                            <Avatar className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
-                              <AvatarImage 
-                                src={getProfilePicture(connection.profilePic)} 
-                                alt={connection.name}
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                              <AvatarFallback className="bg-blue-100 text-blue-600 text-sm sm:text-lg">
-                                {getInitials(connection.name)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <CardTitle className="text-base sm:text-lg text-blue-900 truncate">
-                                {connection.name}
-                              </CardTitle>
-                              <CardDescription className="truncate text-sm">
-                                {connection.specialty}
-                              </CardDescription>
-                              {connection.headline && (
-                                <p className="text-xs sm:text-sm text-gray-600 truncate">
-                                  {connection.headline}
-                                </p>
-                              )}
+                      <Link key={connection._id} href={`/profile/${connection._id}`}>
+                        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center space-x-3 sm:space-x-4">
+                              <Avatar className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
+                                <AvatarImage 
+                                  src={getProfilePicture(connection.profilePic)} 
+                                  alt={connection.name}
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                                <AvatarFallback className="bg-blue-100 text-blue-600 text-sm sm:text-lg">
+                                  {getInitials(connection.name)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <CardTitle className="text-base sm:text-lg text-blue-900 truncate">
+                                  {connection.name}
+                                </CardTitle>
+                                <CardDescription className="truncate text-sm">
+                                  {connection.specialty}
+                                </CardDescription>
+                                {connection.headline && (
+                                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                                    {connection.headline}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="space-y-2 mb-4">
-                            <div className="flex items-center text-gray-600 text-xs sm:text-sm">
-                              <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
-                              <span className="truncate">{connection.institution}, {connection.location}</span>
+                          </CardHeader>
+                          <CardContent className="pt-0">
+                            <div className="space-y-2 mb-4">
+                              <div className="flex items-center text-gray-600 text-xs sm:text-sm">
+                                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                                <span className="truncate">{connection.institution}, {connection.location}</span>
+                              </div>
+                              <div className="flex items-center text-green-600 text-xs sm:text-sm">
+                                <UserCheck className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                                <span>Connected</span>
+                              </div>
                             </div>
-                            <div className="flex items-center text-green-600 text-xs sm:text-sm">
-                              <UserCheck className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
-                              <span>Connected</span>
+                            
+                            <div className="flex flex-col sm:flex-row gap-2" onClick={(e) => e.stopPropagation()}>
+                              <Button variant="outline" className="flex-1 text-xs sm:text-sm">
+                                <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                                Message
+                              </Button>
                             </div>
-                          </div>
-                          
-                          {connection.bio && (
-                            <div className="text-gray-600 text-xs sm:text-sm mb-4 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                              {connection.bio}
-                            </div>
-                          )}
-                          
-                          <div className="flex flex-col sm:flex-row gap-2">
-                            <Button variant="outline" className="flex-1 text-xs sm:text-sm">
-                              <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                              Message
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+                      </Link>
                     ))}
                   </div>
                 </>
@@ -469,63 +465,59 @@ export default function ConnectionsPage() {
             {/* Users Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               {users.map((user) => (
-                <Card key={user._id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center space-x-3 sm:space-x-4">
-                      <Avatar className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
-                        <AvatarImage 
-                          src={getProfilePicture(user.profilePic)} 
-                          alt={user.name}
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                        <AvatarFallback className="bg-blue-100 text-blue-600 text-sm sm:text-lg">
-                          {getInitials(user.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base sm:text-lg text-blue-900 truncate">
-                          {user.name}
-                        </CardTitle>
-                        <CardDescription className="truncate text-sm">
-                          {user.specialty}
-                        </CardDescription>
-                        {user.headline && (
-                          <p className="text-xs sm:text-sm text-gray-600 truncate">
-                            {user.headline}
-                          </p>
-                        )}
+                <Link key={user._id} href={`/profile/${user._id}`}>
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center space-x-3 sm:space-x-4">
+                        <Avatar className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
+                          <AvatarImage 
+                            src={getProfilePicture(user.profilePic)} 
+                            alt={user.name}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                          <AvatarFallback className="bg-blue-100 text-blue-600 text-sm sm:text-lg">
+                            {getInitials(user.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-base sm:text-lg text-blue-900 truncate">
+                            {user.name}
+                          </CardTitle>
+                          <CardDescription className="truncate text-sm">
+                            {user.specialty}
+                          </CardDescription>
+                          {user.headline && (
+                            <p className="text-xs sm:text-sm text-gray-600 truncate">
+                              {user.headline}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-gray-600 text-xs sm:text-sm">
-                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
-                        <span className="truncate">{user.institution}, {user.location}</span>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center text-gray-600 text-xs sm:text-sm">
+                          <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                          <span className="truncate">{user.institution}, {user.location}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600 text-xs sm:text-sm">
+                          <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                          <span>{formatConnectionCount(user.connectionCount)}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center text-gray-600 text-xs sm:text-sm">
-                        <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
-                        <span>{formatConnectionCount(user.connectionCount)}</span>
+                      
+                      <div className="flex flex-col sm:flex-row gap-2" onClick={(e) => e.stopPropagation()}>
+                        {getConnectionButton(user)}
+                        <Button variant="outline" className="flex-1 text-xs sm:text-sm">
+                          <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                          Message
+                        </Button>
                       </div>
-                    </div>
-                    
-                    {user.bio && (
-                      <div className="text-gray-600 text-xs sm:text-sm mb-4 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                        {user.bio}
-                      </div>
-                    )}
-                    
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      {getConnectionButton(user)}
-                      <Button variant="outline" className="flex-1 text-xs sm:text-sm">
-                        <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                        Message
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
 
@@ -575,48 +567,50 @@ export default function ConnectionsPage() {
                 pendingRequests.map((request) => {
                   const follower = request.followerId as any;
                   return (
-                    <Card key={request._id} className="p-4 sm:p-6">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div className="flex items-center space-x-3 sm:space-x-4">
-                          <Avatar className="w-12 h-12 flex-shrink-0">
-                            <AvatarImage 
-                              src={getProfilePicture(follower.profilePic)} 
-                              alt={follower.name}
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                            <AvatarFallback className="bg-blue-100 text-blue-600">
-                              {getInitials(follower.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <h3 className="font-semibold text-gray-900 truncate">{follower.name}</h3>
-                            <p className="text-sm text-gray-600 truncate">{follower.specialty}</p>
-                            <p className="text-sm text-gray-500 truncate">{follower.institution}</p>
+                    <Link key={request._id} href={`/profile/${follower._id}`}>
+                      <Card className="p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-shadow">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                          <div className="flex items-center space-x-3 sm:space-x-4">
+                            <Avatar className="w-12 h-12 flex-shrink-0">
+                              <AvatarImage 
+                                src={getProfilePicture(follower.profilePic)} 
+                                alt={follower.name}
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                              <AvatarFallback className="bg-blue-100 text-blue-600">
+                                {getInitials(follower.name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <h3 className="font-semibold text-gray-900 truncate">{follower.name}</h3>
+                              <p className="text-sm text-gray-600 truncate">{follower.specialty}</p>
+                              <p className="text-sm text-gray-500 truncate">{follower.institution}</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              onClick={() => acceptConnectionRequest(request._id)}
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
+                            >
+                              <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                              Accept
+                            </Button>
+                            <Button
+                              onClick={() => rejectConnectionRequest(request._id)}
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 hover:text-red-700 text-xs sm:text-sm"
+                            >
+                              <XCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                              Reject
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
-                          <Button
-                            onClick={() => acceptConnectionRequest(request._id)}
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
-                          >
-                            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                            Accept
-                          </Button>
-                          <Button
-                            onClick={() => rejectConnectionRequest(request._id)}
-                            size="sm"
-                            variant="outline"
-                            className="text-red-600 hover:text-red-700 text-xs sm:text-sm"
-                          >
-                            <XCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                            Reject
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
+                      </Card>
+                    </Link>
                   );
                 })
               )}
