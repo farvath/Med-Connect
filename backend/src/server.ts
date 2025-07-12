@@ -20,9 +20,30 @@ const PORT = process.env.PORT ;
 
 app.use(express.json());
 app.use(cookieParser());
+// CORS configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+
+// Add default origins based on environment
+const defaultOrigins = [
+  'http://localhost:3001',
+  'http://localhost:3000',
+];
+
+// Add production origins
+if (process.env.NODE_ENV === 'production') {
+  defaultOrigins.push('https://medconnect-mvp.netlify.app');
+}
+
+const corsOrigins = allowedOrigins.length > 0 ? allowedOrigins : defaultOrigins;
+
+console.log('CORS Origins:', corsOrigins);
+console.log('Environment:', process.env.NODE_ENV);
+
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:3001',
+  origin: corsOrigins,
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
 }));
 
 
