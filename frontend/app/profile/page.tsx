@@ -7,11 +7,13 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image'; 
 import { IUserProfile, IEducation, IExperience } from '@/types/user'; 
 import { apiFetch, apiPost, apiPut } from '@/lib/api'; 
+import { useAuth } from '@/contexts/AuthContext';
 
 
 
 const ProfilePage: React.FC = () => {
   const router = useRouter();
+  const { user: contextUser, loading: authLoading, refreshUser } = useAuth();
   const [userData, setUserData] = useState<IUserProfile | null>(null); // State for displaying user data
   const [loading, setLoading] = useState(true); // Loading state for initial fetch
   const [error, setError] = useState<string | null>(null); // Error message state
@@ -21,42 +23,21 @@ const ProfilePage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false); // State for save button loading
   const [message, setMessage] = useState(''); // General success/error message for updates
 
-  // --- Effect to fetch user data on component mount ---
+  // --- Effect to get user data from context or redirect if not logged in ---
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // Make GET request to your backend API to fetch user profile
-        // `withCredentials: true` is crucial for sending HTTP-only cookies (e.g., session cookies)
-       const res = await apiFetch<IUserProfile>("/user/getUser");
-        const fetchedData: IUserProfile = res; // Assuming your API returns data in this structure
+    if (authLoading) return; // Wait for auth to load
+    
+    if (!contextUser) {
+      // User not logged in, redirect to login
+      router.push('/login');
+      return;
+    }
 
-        // Format dates from backend (Date objects) to ISO strings (YYYY-MM-DD) for HTML date inputs
-        const formattedEducation = fetchedData.education.map(edu => ({
-          ...edu,
-          startDate: edu.startDate ? new Date(edu.startDate).toISOString().split('T')[0] : '',
-          endDate: edu.endDate ? new Date(edu.endDate).toISOString().split('T')[0] : undefined,
-        }));
-        const formattedExperience = fetchedData.experience.map(exp => ({
-          ...exp,
-          startDate: exp.startDate ? new Date(exp.startDate).toISOString().split('T')[0] : '',
-          endDate: exp.endDate ? new Date(exp.endDate).toISOString().split('T')[0] : undefined,
-        }));
-
-        setUserData({ ...fetchedData, education: formattedEducation, experience: formattedExperience });
-        setFormValues({ ...fetchedData, education: formattedEducation, experience: formattedExperience }); // Initialize form with fetched data
-      } catch (err: any) {
-        console.error('Error fetching user data:', err);
-        setError(err.response?.data?.message || 'Failed to fetch user data');
-        // Redirect to login if unauthorized (e.g., token expired or not present)
-        if (err.response?.status === 401) {
-          router.push('/login'); // Assuming you have a /login page
-        }
-      } finally {
-        setLoading(false); // Set loading to false once data is fetched or error occurs
-      }
-    };
-    fetchUserData();
-  }, [router]); // Rerun effect if router object changes (though usually not necessary)
+    // Use data from context
+    setUserData(contextUser);
+    setFormValues(contextUser);
+    setLoading(false);
+  }, [contextUser, authLoading, router]);
 
   // --- Handlers for form input changes ---
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -189,6 +170,10 @@ const ProfilePage: React.FC = () => {
 
       setUserData({ ...updatedData, education: formattedEducation, experience: formattedExperience });
       setFormValues({ ...updatedData, education: formattedEducation, experience: formattedExperience });
+      
+      // Refresh the AuthContext with the updated user data
+      await refreshUser();
+      
       setEditMode(false); // Exit edit mode
       setProfileImageFile(null); // Clear selected file after successful upload
       setMessage('Profile updated successfully!'); // Show success message

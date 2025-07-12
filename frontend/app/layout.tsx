@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Header from '../components/Header';
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
   title: 'MedConnect - Professional Networking for Medical Professionals',
@@ -18,10 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <TooltipProvider>
-          <Header />
-          <div style={{ paddingTop: '64px' }}>{children}</div>
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Header />
+            <div style={{ paddingTop: '64px' }}>{children}</div>
+          </TooltipProvider>
+        </AuthProvider>
       </body>
     </html>
   );

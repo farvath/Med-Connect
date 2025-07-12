@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-// Assuming ApiResponse is defined in "@/types/apiResponse" and IUserProfile in "@/types/user"
 import { ApiResponse } from "@/types/apiResponse";
-import { IUserProfile, IProfilePic } from "@/types/user"; // Import your specific types
+import { useAuth } from "@/contexts/AuthContext";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, MessageCircle, Plus, Menu, X, Stethoscope, User, Settings, LogOut, Home, Users, Briefcase, GraduationCap, Building2, Rss, LogIn, UserPlus, ChevronDown } from "lucide-react";
 import Image from "next/image";
-// Import apiFetch and apiPost (your main API utility functions)
-import { apiFetch, apiPost } from "@/lib/api";
+import { apiPost } from "@/lib/api";
 
 // Reusable NavbarItem component
 function NavbarItem({ href, label, active, Icon }: { href: string; label: string; active?: boolean; Icon?: any }) {
@@ -100,14 +98,14 @@ interface ProfileBarProps {
   user: {
     name: string;
     specialty: string;
-    profilePicUrl?: string;
+    profilePic?: { url: string; fileId: string };
   };
   onLogout: () => void;
 }
 
 // Enhanced ProfileBar
 function ProfileBar({ user, onLogout }: ProfileBarProps) {
-  const { name, specialty, profilePicUrl } = user;
+  const { name, specialty, profilePic } = user;
 
   const router = useRouter();
 
@@ -120,7 +118,7 @@ function ProfileBar({ user, onLogout }: ProfileBarProps) {
       <DropdownMenuTrigger asChild>
         <div className="flex items-center gap-2 cursor-pointer group p-1 rounded-full hover:bg-blue-50 transition-all">
           <Avatar className="h-9 w-9 ring-2 ring-white shadow-lg">
-            <AvatarImage src={profilePicUrl || "https://ui-avatars.com/api/?name=" + encodeURIComponent(name || "User") + "&background=0D8ABC&color=fff"} alt="Profile" />
+            <AvatarImage src={profilePic?.url || "https://ui-avatars.com/api/?name=" + encodeURIComponent(name || "User") + "&background=0D8ABC&color=fff"} alt="Profile" />
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-bold">{name ? name[0] : "P"}</AvatarFallback>
           </Avatar>
           <span className="hidden md:block font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{name}</span>
@@ -162,61 +160,27 @@ function ProfileBar({ user, onLogout }: ProfileBarProps) {
 
 
 export default function Header() {
-
-  // State for the user object, containing only necessary fields for the Header
-  const [user, setUser] = useState<{ name: string; specialty: string; profilePicUrl?: string } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoggedIn, logout: contextLogout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        // apiFetch<IUserProfile> expects ApiResponse<IUserProfile> and returns IUserProfile
-        const res: IUserProfile = await apiFetch<IUserProfile>("/user/getUser");
-        console.log("API Response (unwrapped by apiFetch):", res); // This should now directly be IUserProfile
-
-        if (res && res.name && res.specialty) { // Check for essential properties
-          const userDataForState = {
-            name: res.name,
-            specialty: res.specialty,
-            profilePicUrl: res.profilePic?.url, // Access nested url
-          };
-          console.log("User data set to state:", userDataForState);
-          setUser(userDataForState);
-        } else {
-          console.log("API response data was null/undefined or missing essential fields.", res);
-          setUser(null);
-        }
-      } catch (err) {
-        console.error("Error fetching user:", err);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  const isLoggedIn = Boolean(user?.name && user?.specialty);
-  console.log("Render - isLoggedIn:", isLoggedIn, "User state (for render):", user);
-
   const handleLogout = useCallback(async () => {
     try {
-      // Assuming apiPost for logout also returns ApiResponse<null>
-      const res = await apiPost<ApiResponse<null>>("/auth/logout");
-      console.log("Logout success:", res.message);
+      await apiPost<ApiResponse<null>>("/auth/logout");
+      console.log("Logout success");
     } catch (err) {
       console.warn("Logout API error (ignored):", err);
     }
 
-    setUser(null); // clears frontend state
+    contextLogout(); // Update context state
     router.push("/");
-  }, [router]);
+  }, [router, contextLogout]);
 
   // Define nav items for both states
   const navItemsLoggedIn = [
     { href: "/feed", label: "Feed", Icon: Rss },
     { href: "/connections", label: "Connections", Icon: Users },
+     { href: "/colleges", label: "Colleges", Icon: GraduationCap },
     { href: "/jobs", label: "Jobs", Icon: Briefcase },
   ];
   const navItemsLoggedOut = [
@@ -244,7 +208,7 @@ export default function Header() {
           {isLoggedIn && <SearchBar />}
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-6 ">
+          <nav className="hidden lg:flex items-center space-x-3 ">
             {(isLoggedIn ? navItemsLoggedIn : navItemsLoggedOut).map((item) => (
               <NavbarItem
                 key={item.href}

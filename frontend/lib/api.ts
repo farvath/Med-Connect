@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ApiResponse } from '@/types/apiResponse'; // Assuming you have this type defined
+import { HospitalListResponse, HospitalResponse, HospitalSpecialtiesResponse, HospitalLocationsResponse } from '@/types/hospitals';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -23,17 +24,29 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response, // Keep full response
+  (response) => response,
   (error) => {
     const status = error.response?.status;
-    const message =
-      error.response?.data?.message || error.message || "Something went wrong";
+    const message = error.response?.data?.message || error.message || "Something went wrong";
 
-    const err = new Error(message) as Error & { status?: number };
-    err.status = status;
+    // Create enhanced error object
+    const enhancedError = new Error(message) as Error & { 
+      status?: number;
+      isAuthError?: boolean;
+    };
+    enhancedError.status = status;
+    enhancedError.isAuthError = status === 401;
 
-    // ⚠️ Do NOT console.log or throw extra info
-    return Promise.reject(err);
+    // Completely suppress 401 errors from console
+    if (status === 401) {
+      // Don't log anything for auth errors
+      return Promise.reject(enhancedError);
+    }
+
+    // For other errors, you can optionally log them
+    // console.error('API Error:', status, message);
+
+    return Promise.reject(enhancedError);
   }
 );
 
@@ -86,6 +99,90 @@ export const apiPut = <T>(path: string, data?: any): Promise<T> =>
 
 export const apiDelete = <T>(path: string, params?: any): Promise<T> =>
   apiFetch<T>(path, { method: 'DELETE', params });
+
+// Safe authentication check that doesn't throw on 401 errors
+export async function checkAuth(): Promise<any | null> {
+  try {
+    return await apiFetch<any>('/user/getUser');
+  } catch (error: any) {
+    // Return null for auth errors (401) instead of throwing
+    if (error.status === 401 || error.isAuthError) {
+      return null;
+    }
+    // Re-throw other errors (but don't log them)
+    throw error;
+  }
+}
+
+// Generic wrapper to suppress 401 errors for any API call
+export async function safeApiCall<T>(apiCall: () => Promise<T>): Promise<T | null> {
+  try {
+    return await apiCall();
+  } catch (error: any) {
+    // Return null for auth errors instead of throwing
+    if (error.status === 401 || error.isAuthError) {
+      return null;
+    }
+    // Re-throw other errors
+    throw error;
+  }
+}
+
+// Hospital API functions
+export const getHospitals = (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  location?: string;
+  specialty?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}): Promise<HospitalListResponse['data']> =>
+  apiGet<HospitalListResponse['data']>('/hospitals', params);
+
+export const getHospitalById = (id: string): Promise<HospitalResponse['data']> =>
+  apiGet<HospitalResponse['data']>(`/hospitals/${id}`);
+
+export const getHospitalSpecialties = (): Promise<HospitalSpecialtiesResponse['data']> =>
+  apiGet<HospitalSpecialtiesResponse['data']>('/hospitals/meta/specialties');
+
+export const getHospitalLocations = (): Promise<HospitalLocationsResponse['data']> =>
+  apiGet<HospitalLocationsResponse['data']>('/hospitals/meta/locations');
+
+// User API functions
+export const updateUser = (data: any): Promise<any> =>
+  apiPut<any>('/user/updateUser', data);
+
+// Post API functions
+export const createPost = (formData: FormData): Promise<any> =>
+  api.post('/posts/create', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }).then(response => response.data);
+
+export const getFeedPosts = async (page: number = 1, limit: number = 10): Promise<any> => {
+  const response = await api.get(`/posts/feed?page=${page}&limit=${limit}`);
+  return response.data; // Return the full response including pagination
+};
+
+export const getPost = (postId: string): Promise<any> =>
+  apiGet<any>(`/posts/${postId}`);
+
+export const toggleLike = async (entityId: string, entityType: 'post' | 'comment'): Promise<any> => {
+  const response = await api.post('/posts/like', { entityId, entityType });
+  return response.data;
+};
+
+export const addComment = async (postId: string, content: string): Promise<any> => {
+  const response = await api.post('/posts/comment', { postId, content });
+  return response.data;
+};
+
+export const getPostComments = async (postId: string, page: number = 1, limit: number = 10): Promise<any> => {
+  const response = await api.get(`/posts/${postId}/comments?page=${page}&limit=${limit}`);
+  return response.data; // Return the full response including pagination
+};
 
 // Optionally export Axios instance
 export default api;

@@ -7,8 +7,12 @@ import authRoutes from './routes/authRoutes';
 import institutionsRoutes from './routes/institutionsRoutes';
 import lookupRoutes from './routes/lookupRoutes';
 import userRoutes from './routes/userRoutes';
+import connectionRoutes from './routes/connectionRoutes';
+import postRoutes from './routes/postRoutes';
 import { connectDB } from './services/db';
-// import other route files as you migrate them
+import collegeRoutes from './routes/collegeRoutes';
+import hospitalRoutes from './routes/hospitalRoutes';
+
 
 const app = express();
 const PORT = process.env.PORT ;
@@ -22,14 +26,18 @@ app.use(cors({
 
 
 connectDB()
-  .then(() => {
-    console.log(" MongoDB connected");
+  .then(async () => {
+    console.log(" MongoDB connected")
 
     // Mount routes
     app.use('/api/auth', authRoutes);
     app.use('/api/institutions', institutionsRoutes);
     app.use('/api/lookup', lookupRoutes);
     app.use('/api/user', userRoutes);
+    app.use("/api/colleges", collegeRoutes);
+    app.use("/api/hospitals", hospitalRoutes);
+    app.use("/api/connections", connectionRoutes);
+    app.use("/api/posts", postRoutes);
 
     app.listen(PORT, () => {
       console.log(` Express server running on http://localhost:${PORT}`);
