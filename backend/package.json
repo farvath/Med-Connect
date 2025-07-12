@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "ts-node src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "vercel-build": "echo 'No build step required for Vercel'"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
